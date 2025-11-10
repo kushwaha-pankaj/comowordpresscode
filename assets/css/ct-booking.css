@@ -708,3 +708,9 @@
     margin-top: 0px !important;
   }
 }
+
+@media (max-width: 640px) {
+  .header-area.sticky {
+    margin-top: 0px !important;
+  }
+}

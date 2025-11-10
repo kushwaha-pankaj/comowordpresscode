@@ -60,6 +60,19 @@ jQuery(function($){
     return { ok:true };
   }
 
+  var HAS_POST_ID = typeof CT_TS_ADMIN !== 'undefined' && parseInt(CT_TS_ADMIN.postId || '0', 10) > 0;
+
+  function requirePostId(message){
+    if (HAS_POST_ID) return true;
+    toast(message || 'Please save the tour/package (Save Draft or Publish) before managing time slots.');
+    return false;
+  }
+
+  function showNeedsPostMessage(){
+    setAddDisabled(true);
+    $('#ct_slots_table tbody').html('<tr><td colspan="9">Save the tour/package (Save Draft or Publish) before managing time slots.</td></tr>');
+  }
+
   /* ---------- pickers init ---------- */
   function initPickers(){
     $('.ct-date').each(function(){
@@ -127,6 +140,11 @@ jQuery(function($){
       return;
     }
 
+    if (!HAS_POST_ID) {
+      showNeedsPostMessage();
+      return;
+    }
+
     // run validation to ensure date is acceptable before fetching
     var v = validateSpecificDate(date);
     if(!v.ok){
@@ -175,6 +193,10 @@ jQuery(function($){
 
   // Add private slot: send capacity = maxPeople (from localized var or input)
   function addPrivateSlot(){
+    if (!HAS_POST_ID) {
+      requirePostId('Please save the tour/package before adding time slots.');
+      return;
+    }
     var date = $('#ct_specific_date').val();
     var validation = validateSpecificDate(date);
     if(!validation.ok){ toast(validation.msg); return; }
@@ -226,6 +248,10 @@ jQuery(function($){
   }
 
   function addSharedSlot(){
+    if (!HAS_POST_ID) {
+      requirePostId('Please save the tour/package before adding time slots.');
+      return;
+    }
     var date = $('#ct_specific_date').val();
     var validation = validateSpecificDate(date);
     if(!validation.ok){ toast(validation.msg); return; }
@@ -273,6 +299,10 @@ jQuery(function($){
   }
 
   function deleteSlot(id){
+    if (!HAS_POST_ID) {
+      requirePostId('Please save the tour/package before deleting time slots.');
+      return;
+    }
     var date = $('#ct_specific_date').val();
     $.post(CT_TS_ADMIN.ajax, {
       action:'ct_admin_delete_slot',
@@ -297,6 +327,10 @@ jQuery(function($){
   // When the specific date (or range inputs) change we validate and fetch
   $('#ct_specific_date, #ct_date_from, #ct_date_to').on('change', function(){
     var date = $('#ct_specific_date').val();
+    if (!HAS_POST_ID) {
+      showNeedsPostMessage();
+      return;
+    }
     var v = validateSpecificDate(date);
     if(!v.ok){
       setDateLabel('');
@@ -327,6 +361,11 @@ jQuery(function($){
       deleteSlot(id);
     }
   });
+
+  if (!HAS_POST_ID) {
+    showNeedsPostMessage();
+    return;
+  }
 
   // initial load
   var pre = $('#ct_specific_date').val();

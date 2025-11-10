@@ -253,7 +253,8 @@ final class CT_Turio_Timeslots {
     $post_id = absint($_POST['post_id'] ?? 0);
     $date = $this->norm_date(sanitize_text_field($_POST['date'] ?? ''));
 
-    if (!$post_id || !current_user_can('edit_post', $post_id)) wp_send_json_error(['msg'=>'No permission.']);
+    if (!$post_id) wp_send_json_error(['msg'=>'Please save the tour/package before managing time slots.']);
+    if (!current_user_can('edit_post', $post_id)) wp_send_json_error(['msg'=>'No permission.']);
     if (!$date) wp_send_json_error(['msg'=>'Invalid date.']);
     if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
 
@@ -315,7 +316,8 @@ final class CT_Turio_Timeslots {
     $promo = is_numeric($_POST['promo'] ?? null) ? floatval($_POST['promo']) : 0.0;
     $disc = is_numeric($_POST['disc'] ?? null) ? floatval($_POST['disc']) : 0.0;
 
-    if (!$post_id || !current_user_can('edit_post', $post_id)) wp_send_json_error(['msg'=>'No permission.']);
+    if (!$post_id) wp_send_json_error(['msg'=>'Please save the tour/package before adding time slots.']);
+    if (!current_user_can('edit_post', $post_id)) wp_send_json_error(['msg'=>'No permission.']);
     if (!$date) wp_send_json_error(['msg'=>'Invalid date.']);
     if (!$start || !$end) wp_send_json_error(['msg'=>'Invalid start or end time.']);
 
@@ -385,7 +387,9 @@ final class CT_Turio_Timeslots {
     $post_id = absint($_POST['post_id'] ?? 0);
     $slot_id = absint($_POST['slot_id'] ?? 0);
 
-    if (!$post_id || !$slot_id || !current_user_can('edit_post', $post_id))
+    if (!$post_id) wp_send_json_error(['msg'=>'Please save the tour/package before deleting time slots.']);
+    if (!$slot_id) wp_send_json_error(['msg'=>'Missing slot ID.']);
+    if (!current_user_can('edit_post', $post_id))
       wp_send_json_error(['msg'=>'No permission.']);
 
     if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
