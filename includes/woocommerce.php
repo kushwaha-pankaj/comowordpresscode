@@ -65,7 +65,23 @@ add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product
   }
 
   if ($date)     $cart_item_data['date']     = $date;
-  if ($slot_id)  $cart_item_data['slot_id']  = $slot_id;
+  if ($slot_id)  {
+    $cart_item_data['slot_id']  = $slot_id;
+    // Also store human-friendly label for reliability
+    global $wpdb;
+    $table = $wpdb->prefix . 'turio_timeslots';
+    $row = $wpdb->get_row(
+      $wpdb->prepare("SELECT `time`, `duration` FROM `{$table}` WHERE `id` = %d", intval($slot_id)),
+      ARRAY_A
+    );
+    if ($row && !empty($row['time']) && is_numeric($row['duration'])) {
+      list($sh, $sm) = array_map('intval', explode(':', $row['time']));
+      $endMin = ($sh * 60 + $sm + intval($row['duration'])) % (24 * 60);
+      $eh = floor($endMin / 60);
+      $em = $endMin % 60;
+      $cart_item_data['slot_label'] = $row['time'] . ' – ' . sprintf('%02d:%02d', $eh, $em);
+    }
+  }
   if ($mode)     $cart_item_data['mode']     = strtolower($mode);
 
   if ($people   !== '') $cart_item_data['people']   = max(0, intval($people));
@@ -96,7 +112,37 @@ add_action('woocommerce_before_calculate_totals', function ($cart) {
 /* 3) Show data in Cart/Checkout */
 add_filter('woocommerce_get_item_data', function ($item_data, $cart_item) {
   if (!empty($cart_item['date']))     $item_data[] = ['name'=>__('Date','comotour'),         'value'=>esc_html($cart_item['date'])];
-  if (!empty($cart_item['slot_id']))  $item_data[] = ['name'=>__('Time Slot','comotour'),    'value'=>esc_html($cart_item['slot_id'])];
+
+  // Improve time slot display: show HH:MM – HH:MM rather than numeric ID
+  if (!empty($cart_item['slot_id'])) {
+    // Prefer precomputed label if available
+    if (!empty($cart_item['slot_label'])) {
+      $slotLabel = esc_html($cart_item['slot_label']);
+      $item_data[] = ['name'=>__('Time Slot','comotour'), 'value'=>$slotLabel];
+      goto after_slot_label;
+    }
+
+    $slotLabel = esc_html($cart_item['slot_id']);
+    global $wpdb;
+    $table = $wpdb->prefix . 'turio_timeslots';
+    // Look up slot details safely
+    $row = $wpdb->get_row(
+      $wpdb->prepare("SELECT `time`, `duration` FROM `{$table}` WHERE `id` = %d", intval($cart_item['slot_id'])),
+      ARRAY_A
+    );
+    if ($row && !empty($row['time']) && is_numeric($row['duration'])) {
+      // compute end time
+      list($sh, $sm) = array_map('intval', explode(':', $row['time']));
+      $endMin = ($sh * 60 + $sm + intval($row['duration'])) % (24 * 60);
+      $eh = floor($endMin / 60);
+      $em = $endMin % 60;
+      $end = sprintf('%02d:%02d', $eh, $em);
+      $slotLabel = esc_html($row['time'] . ' – ' . $end);
+    }
+    $item_data[] = ['name'=>__('Time Slot','comotour'), 'value'=>$slotLabel];
+    after_slot_label:;
+  }
+
   if (!empty($cart_item['mode']))     $item_data[] = ['name'=>__('Booking Type','comotour'), 'value'=>ucfirst(esc_html($cart_item['mode']))];
   if (isset($cart_item['adults']))    $item_data[] = ['name'=>__('Adults','comotour'),       'value'=>intval($cart_item['adults'])];
   if (isset($cart_item['children']))  $item_data[] = ['name'=>__('Children','comotour'),     'value'=>intval($cart_item['children'])];
@@ -115,7 +161,25 @@ add_filter('woocommerce_get_item_data', function ($item_data, $cart_item) {
 /* 4) Persist on Order */
 add_action('woocommerce_checkout_create_order_line_item', function ($item, $cart_item_key, $values) {
   if (!empty($values['date']))     $item->add_meta_data('Date', $values['date']);
-  if (!empty($values['slot_id']))  $item->add_meta_data('Time Slot', $values['slot_id']);
+  if (!empty($values['slot_id']))  {
+    // Save human-friendly time range if possible
+    $toSave = !empty($values['slot_label']) ? $values['slot_label'] : $values['slot_id'];
+    global $wpdb;
+    $table = $wpdb->prefix . 'turio_timeslots';
+    $row = $wpdb->get_row(
+      $wpdb->prepare("SELECT `time`, `duration` FROM `{$table}` WHERE `id` = %d", intval($values['slot_id'])),
+      ARRAY_A
+    );
+    if ($row && !empty($row['time']) && is_numeric($row['duration'])) {
+      list($sh, $sm) = array_map('intval', explode(':', $row['time']));
+      $endMin = ($sh * 60 + $sm + intval($row['duration'])) % (24 * 60);
+      $eh = floor($endMin / 60);
+      $em = $endMin % 60;
+      $end = sprintf('%02d:%02d', $eh, $em);
+      $toSave = $row['time'] . ' – ' . $end;
+    }
+    $item->add_meta_data('Time Slot', $toSave);
+  }
   if (!empty($values['mode']))     $item->add_meta_data('Booking Type', ucfirst($values['mode']));
   if (isset($values['adults']))    $item->add_meta_data('Adults',   intval($values['adults']));
   if (isset($values['children']))  $item->add_meta_data('Children', intval($values['children']));
