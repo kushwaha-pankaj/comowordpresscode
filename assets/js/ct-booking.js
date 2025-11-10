@@ -500,46 +500,52 @@ if (form) {
 }
 
 // --- Sticky booking bar offsets -------------------------------------------
-document.addEventListener('DOMContentLoaded', function () {
+function initStickyBar() {
   if (!document.body.classList.contains('ct-ts-single')) return;
   var bar = document.getElementById('ct-booking-sticky');
-  if (!bar) return;
+  if (!bar) {
+    // Element not ready yet, try again after a short delay
+    setTimeout(initStickyBar, 100);
+    return;
+  }
 
   document.body.classList.add('ct-booking-bar-active');
 
   function updateOffsets() {
     var topOffset = 0;
     var adminBar = document.getElementById('wpadminbar');
-    if (adminBar) {
+    if (adminBar && adminBar.offsetHeight > 0) {
       topOffset += adminBar.offsetHeight;
     }
 
     var topbar = document.querySelector('.topbar-area');
-    if (topbar) {
+    if (topbar && topbar.offsetHeight > 0) {
       topOffset += topbar.offsetHeight;
     }
 
     var searchbar = document.querySelector('.main-searchbar-wrapper');
-    if (searchbar) {
+    if (searchbar && searchbar.offsetHeight > 0) {
       topOffset += searchbar.offsetHeight;
     }
 
-    var header = document.querySelector('.sticky-header') || document.querySelector('header');
-    if (header) {
+    var header = document.querySelector('.sticky-header') || document.querySelector('header.header');
+    if (header && header.offsetHeight > 0) {
       topOffset += header.offsetHeight;
     }
 
-    var barHeight = bar.offsetHeight;
+    var barHeight = bar.offsetHeight || 60;
 
-    document.documentElement.style.setProperty('--ct-sticky-offset', topOffset + 'px');
-    document.documentElement.style.setProperty('--ct-booking-bar-height', barHeight + 'px');
-    document.body.style.setProperty('--ct-sticky-offset', topOffset + 'px');
-    document.body.style.setProperty('--ct-booking-bar-height', barHeight + 'px');
+    document.documentElement.style.setProperty('--ct-sticky-offset', topOffset + 'px', 'important');
+    document.documentElement.style.setProperty('--ct-booking-bar-height', barHeight + 'px', 'important');
+    document.body.style.setProperty('--ct-sticky-offset', topOffset + 'px', 'important');
+    document.body.style.setProperty('--ct-booking-bar-height', barHeight + 'px', 'important');
+    bar.style.setProperty('top', topOffset + 'px', 'important');
     console.log('[CT Booking] offsets', { topOffset: topOffset, barHeight: barHeight });
   }
 
   updateOffsets();
-  setTimeout(updateOffsets, 400);
+  setTimeout(updateOffsets, 200);
+  setTimeout(updateOffsets, 600);
   window.addEventListener('resize', updateOffsets);
 
   var stickyButton = bar.querySelector('.ct-booking-button');
@@ -548,9 +554,21 @@ document.addEventListener('DOMContentLoaded', function () {
       var target = document.getElementById('ct-booking-card');
       if (target) {
         e.preventDefault();
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        var targetTop = target.getBoundingClientRect().top + window.pageYOffset - 20;
+        window.scrollTo({ top: targetTop, behavior: 'smooth' });
       }
     });
   }
+}
+
+// Try multiple times to catch the element
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initStickyBar);
+} else {
+  initStickyBar();
+}
+// Also try after page load in case wp_footer runs late
+window.addEventListener('load', function() {
+  setTimeout(initStickyBar, 100);
 });
 
