@@ -77,6 +77,68 @@
   font-size: 16px;
 }
 
+/* Plugin-driven layout overrides */
+.ct-ts-single .booking-form-box > h5 {
+  display: none !important;
+}
+
+.ct-ts-single .breadcrumb {
+  display: none !important;
+}
+
+.ct-ts-single .package-details-wrapper.pt-110 {
+  padding-top: 70px !important;
+  position: relative;
+}
+
+.ct-ts-single .package-details-wrapper.pt-110::before {
+  content: "";
+  position: absolute;
+  top: 32px;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(12, 62, 58, 0.12);
+  pointer-events: none;
+}
+
+.ct-mobile-book-bar {
+  display: none;
+}
+
+.ct-mobile-book-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 16px;
+  font-weight: 700;
+  text-decoration: none;
+  border-radius: 999px;
+  background: var(--ct-accent, #0b7c76);
+  color: #fff;
+  box-shadow: 0 12px 24px rgba(11, 124, 118, 0.25);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ct-mobile-book-button:active {
+  transform: scale(0.98);
+  box-shadow: 0 8px 18px rgba(11, 124, 118, 0.35);
+}
+
+@media (max-width: 767px) {
+  .ct-mobile-book-bar {
+    position: sticky;
+    top: 0;
+    z-index: 999;
+    display: block;
+    background: #ffffff;
+    padding: 12px 20px;
+    border-bottom: 1px solid rgba(12, 62, 58, 0.08);
+  }
+}
+
 /* Hide "Details" title */
 .ct-section-title:has(+ .ct-people-wrap) {
   display: none !important;
