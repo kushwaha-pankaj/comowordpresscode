@@ -513,7 +513,18 @@ document.addEventListener('DOMContentLoaded', function () {
     if (adminBar) {
       topOffset += adminBar.offsetHeight;
     }
-    var header = document.querySelector('header');
+
+    var topbar = document.querySelector('.topbar-area');
+    if (topbar) {
+      topOffset += topbar.offsetHeight;
+    }
+
+    var searchbar = document.querySelector('.main-searchbar-wrapper');
+    if (searchbar) {
+      topOffset += searchbar.offsetHeight;
+    }
+
+    var header = document.querySelector('.sticky-header') || document.querySelector('header');
     if (header) {
       topOffset += header.offsetHeight;
     }
@@ -525,6 +536,7 @@ document.addEventListener('DOMContentLoaded', function () {
   }
 
   updateOffsets();
+  setTimeout(updateOffsets, 400);
   window.addEventListener('resize', updateOffsets);
 
   var stickyButton = bar.querySelector('.ct-booking-button');
