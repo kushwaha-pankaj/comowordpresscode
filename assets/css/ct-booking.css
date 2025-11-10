@@ -640,9 +640,7 @@
   display: none !important;
 }
 
-.header-area.sticky {
-  margin-top: 0px !important;
-}
+
 
 /* ============================================================================
    RESPONSIVE DESIGN
@@ -692,5 +690,9 @@
   .slot-price {
     width: 100%;
     text-align: left;
+  }
+
+  .header-area.sticky {
+    margin-top: 0px !important;
   }
 }
