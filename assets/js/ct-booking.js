@@ -43,6 +43,8 @@
   var peoplePlus = document.getElementById('ct_people_plus');
   var maxDisplay = document.getElementById('ct_max_display');
   var extrasWrap = document.getElementById('ct_extras');
+  var stickySummary = document.querySelector('.ct-booking-summary');
+  var stickyDefaultSummary = stickySummary ? stickySummary.textContent : '';
 
   if (maxDisplay) maxDisplay.textContent = ctx.maxPeople;
 
@@ -68,6 +70,24 @@
     var base = (ctx.selectedSlot && ctx.selectedSlot.price) ? ctx.selectedSlot.price : ctx.regular;
     var total = ctx.mode === 'shared' ? (base * people) + extras : base + extras;
     totalPrice.textContent = money(total);
+  }
+
+  function updateStickySummary() {
+    if (!stickySummary) return;
+    if (!ctx.selectedDate) {
+      stickySummary.textContent = stickyDefaultSummary || 'Select your date & time to book this experience';
+      return;
+    }
+    var summaryParts = [];
+    summaryParts.push(ctx.selectedDate);
+    if (ctx.selectedSlot) {
+      var endLabel = ctx.selectedSlot.end || '';
+      var timeLabel = ctx.selectedSlot && ctx.selectedSlot.price !== undefined
+        ? ctx.selectedSlot.time + (ctx.selectedSlot.end ? ' – ' + ctx.selectedSlot.end : '')
+        : ctx.selectedSlot.time;
+      summaryParts.push(timeLabel);
+    }
+    stickySummary.textContent = summaryParts.join(' • ');
   }
 
   function restBase(){
@@ -132,6 +152,7 @@
       ctx.selectedSlot = null;
       updateHeader();
       calcTotal();
+      updateStickySummary();
       return;
     }
     slots.forEach(function(s, idx){
@@ -173,7 +194,9 @@
             capacity: s.capacity,
             booked: s.booked,
             remaining: remaining,
-            duration: s.duration
+            duration: s.duration,
+            end: s.end,
+            time: s.time
           };
           if (selectedIso) selectedIso.textContent = ctx.selectedDate;
           
@@ -188,6 +211,7 @@
           
           updateHeader();
           calcTotal();
+          updateStickySummary();
         }
       });
     });
@@ -196,6 +220,7 @@
   function loadSlots(date){
     ctx.selectedDate = date;
     if (selectedIso) selectedIso.textContent = date;
+    updateStickySummary();
     var url = restBase() + '/slots?post_id=' + ctx.postId + '&date=' + date + '&mode=' + ctx.mode;
     
     fetch(url, { credentials: 'same-origin' })
@@ -307,7 +332,8 @@
     if (maxDisplay) maxDisplay.textContent = ctx.maxPeople;
     peopleInput.value = 1;
     updateHeader(); 
-    calcTotal(); 
+    calcTotal();
+    updateStickySummary();
   });
 
   // Allow deselecting time slot by clicking again
@@ -336,13 +362,15 @@
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function(){ 
       updateHeader(); 
-      calcTotal(); 
+      calcTotal();
+      updateStickySummary();
       initCalendar();
     });
   } else {
     setTimeout(function(){ 
       updateHeader(); 
-      calcTotal(); 
+      calcTotal();
+      updateStickySummary();
       initCalendar();
     }, 100);
   }
@@ -470,4 +498,44 @@ if (form) {
     if (qtyInput && qtyVal > 0) qtyInput.value = String(qtyVal);
   }, true);
 }
+
+// --- Sticky booking bar offsets -------------------------------------------
+document.addEventListener('DOMContentLoaded', function () {
+  if (!document.body.classList.contains('ct-ts-single')) return;
+  var bar = document.getElementById('ct-booking-sticky');
+  if (!bar) return;
+
+  document.body.classList.add('ct-booking-bar-active');
+
+  function updateOffsets() {
+    var topOffset = 0;
+    var adminBar = document.getElementById('wpadminbar');
+    if (adminBar) {
+      topOffset += adminBar.offsetHeight;
+    }
+    var header = document.querySelector('header');
+    if (header) {
+      topOffset += header.offsetHeight;
+    }
+
+    var barHeight = bar.offsetHeight;
+
+    document.documentElement.style.setProperty('--ct-sticky-offset', topOffset + 'px');
+    document.documentElement.style.setProperty('--ct-booking-bar-height', barHeight + 'px');
+  }
+
+  updateOffsets();
+  window.addEventListener('resize', updateOffsets);
+
+  var stickyButton = bar.querySelector('.ct-booking-button');
+  if (stickyButton) {
+    stickyButton.addEventListener('click', function (e) {
+      var target = document.getElementById('ct-booking-card');
+      if (target) {
+        e.preventDefault();
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    });
+  }
+});
 
