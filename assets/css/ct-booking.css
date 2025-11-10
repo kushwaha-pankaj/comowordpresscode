@@ -696,3 +696,15 @@
     margin-top: 0px !important;
   }
 }
+
+@media (max-width: 767px) {
+  .header-area.sticky {
+    margin-top: 0px !important;
+  }
+}
+
+@media (max-width: 320px) {
+  .header-area.sticky {
+    margin-top: 0px !important;
+  }
+}
