@@ -235,3 +235,11 @@ add_filter('woocommerce_return_to_shop_redirect', function ($url) {
 
   return $experiences_url;
 }, 10, 1);
+
+/* 7) Hide coupon form on cart page */
+add_filter('woocommerce_coupons_enabled', function ($enabled) {
+  if (function_exists('is_cart') && is_cart()) {
+    return false;
+  }
+  return $enabled;
+});
