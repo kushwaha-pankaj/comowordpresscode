@@ -73,6 +73,38 @@ jQuery(function($){
     $('#ct_slots_table tbody').html('<tr><td colspan="9">Save the tour/package (Save Draft or Publish) before managing time slots.</td></tr>');
   }
 
+  function dateToISO(dateObj){
+    var y = dateObj.getFullYear();
+    var m = String(dateObj.getMonth() + 1).padStart(2, '0');
+    var d = String(dateObj.getDate()).padStart(2, '0');
+    return y + '-' + m + '-' + d;
+  }
+
+  function buildDateRange(fromRaw, toRaw){
+    if(!fromRaw || !toRaw){
+      return { ok:false, msg:'Enter both From and To dates to create slots for a range.' };
+    }
+    var from = parseDateInput(fromRaw);
+    var to = parseDateInput(toRaw);
+    if(!from || !to){
+      return { ok:false, msg:'Date range must be valid YYYY-MM-DD values.' };
+    }
+    if(to < from){
+      return { ok:false, msg:'"To" date must be on or after the "From" date.' };
+    }
+    var list = [];
+    var current = new Date(from.getTime());
+    var maxDays = 366;
+    while (current <= to){
+      list.push(dateToISO(current));
+      if (list.length >= maxDays){
+        return { ok:false, msg:'Date range too large. Please use 366 days or fewer at a time.' };
+      }
+      current.setDate(current.getDate() + 1);
+    }
+    return { ok:true, dates:list };
+  }
+
   /* ---------- pickers init ---------- */
   function initPickers(){
     $('.ct-date').each(function(){
@@ -197,9 +229,29 @@ jQuery(function($){
       requirePostId('Please save the tour/package before adding time slots.');
       return;
     }
-    var date = $('#ct_specific_date').val();
-    var validation = validateSpecificDate(date);
-    if(!validation.ok){ toast(validation.msg); return; }
+    var specificRaw = $('#ct_specific_date').val().trim();
+    var dateList = [];
+    var targetDate = '';
+
+    if (specificRaw) {
+      var validation = validateSpecificDate(specificRaw);
+      if(!validation.ok){ toast(validation.msg); return; }
+      var specObj = parseDateInput(specificRaw);
+      targetDate = dateToISO(specObj);
+      dateList = [targetDate];
+    } else {
+      var fromRaw = $('#ct_date_from').val().trim();
+      var toRaw = $('#ct_date_to').val().trim();
+      var range = buildDateRange(fromRaw, toRaw);
+      if(!range.ok){ toast(range.msg); return; }
+      dateList = range.dates;
+      targetDate = range.dates[0];
+    }
+
+    if (!dateList.length){
+      toast('Provide either a specific date or a valid date range.');
+      return;
+    }
 
     var start = normTime($('#ct_p_start').val());
     var end   = normTime($('#ct_p_end').val());
@@ -209,8 +261,8 @@ jQuery(function($){
     var mode  = $('#ct_mode').val() || 'private';
 
     // decide capacity: prefer input value (unsaved), else localized value
-    var capacity = getCurrentMaxPeople();
-    if (!capacity || capacity < 1) capacity = 1;
+    var capacityInventory = getCurrentMaxPeople();
+    if (isNaN(capacityInventory) || capacityInventory < 0) capacityInventory = 0;
 
     if(!start || !end){ toast('Please fill Start and End (HH:MM).'); return; }
     if(price<=0 && promo<=0){ toast('Please enter a Price or Promo.'); return; }
@@ -219,14 +271,15 @@ jQuery(function($){
       action: 'ct_admin_add_slot',
       nonce:  CT_TS_ADMIN.nonce,
       post_id:CT_TS_ADMIN.postId,
-      date:   date,
+      date:   targetDate,
+      date_list: JSON.stringify(dateList),
       mode:   mode,
       start:  start,
       end:    end,
       price:  price,
       promo:  promo,
       disc:   disc,
-      capacity: capacity,
+      capacity: capacityInventory,
       post_max_people: getCurrentMaxPeople()
     }, function(res){
       console.log('ct_admin_add_slot response:', res);
@@ -239,8 +292,19 @@ jQuery(function($){
       if (res.data && typeof res.data.capacity_used !== 'undefined') {
         console.log('Server resolved capacity_used =', res.data.capacity_used);
       }
+      var serverMsg = (res.data && res.data.message) ? res.data.message : '';
+      if (serverMsg && dateList.length === 1) {
+        toast(serverMsg);
+      }
       $('#ct_p_start,#ct_p_end,#ct_p_price,#ct_p_promo,#ct_p_disc').val('');
-      fetchSlotsFor(date);
+      if (dateList.length === 1) {
+        fetchSlotsFor(targetDate);
+      } else {
+        var rangeMsg = serverMsg || ('Created '+dateList.length+' slots across the selected range. Pick a specific date to review them.');
+        toast(rangeMsg);
+        $('#ct_slots_table tbody').html('<tr><td colspan="9">'+rangeMsg+'</td></tr>');
+        setDateLabel('');
+      }
     }, 'json').fail(function(xhr){
       console.error('AJAX addPrivateSlot failed', xhr.responseText);
       toast('AJAX error adding slot. See console (F12) for details.');

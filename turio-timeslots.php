@@ -102,14 +102,16 @@ final class CT_Turio_Timeslots {
     echo '<input type="text" class="ct-date" name="ct_specific_date" id="ct_specific_date" value="" placeholder="YYYY-MM-DD" autocomplete="off">';
     echo '</p>';
 
-    echo '<p><label><strong>Max number of people</strong><br>';
-    echo '<input type="number" min="1" name="ct_max_people" id="ct_max_people" value="'.esc_attr($max_people).'">';
+    echo '<p><label><strong>Bookings available (inventory)</strong><br>';
+    echo '<input type="number" min="0" name="ct_max_people" id="ct_max_people" value="'.esc_attr($max_people).'" placeholder="How many times can this tour be booked?">';
+    echo '<span class="description">For private slots this becomes the slot capacity. Shared slots cannot exceed this number.</span>';
     echo '</label></p>';
 
     echo '</div><hr class="ct-hr"/>';
 
     echo '<div id="ct_private_box" class="'.($mode==='shared'?'ct-hide':'').'">';
     echo '<h3>Private – Time Slots & Pricing</h3>';
+    echo '<p class="description">Tip: leave “Specific Date” empty to duplicate this slot across the selected date range.</p>';
     echo '<div class="ct-row">';
     echo '<input type="text" id="ct_p_start" class="ct-time" placeholder="Start (07:00)">';
     echo '<input type="text" id="ct_p_end" class="ct-time" placeholder="End (09:00)">';
@@ -122,6 +124,7 @@ final class CT_Turio_Timeslots {
 
     echo '<div id="ct_shared_box" class="'.($mode==='private'?'ct-hide':'').'">';
     echo '<h3>Shared – Time Slots & Pricing</h3>';
+    echo '<p class="description">Inventory above limits how many shared slots you can sell overall. Use capacity below for seats available in this specific slot.</p>';
     echo '<div class="ct-row">';
     echo '<input type="text" id="ct_s_start" class="ct-time" placeholder="Start (10:00)">';
     echo '<input type="text" id="ct_s_end" class="ct-time" placeholder="End (11:00)">';
@@ -252,10 +255,36 @@ final class CT_Turio_Timeslots {
 
     $post_id = absint($_POST['post_id'] ?? 0);
     $date = $this->norm_date(sanitize_text_field($_POST['date'] ?? ''));
+    $range_from = $this->norm_date(sanitize_text_field($_POST['range_from'] ?? ''));
+    $range_to = $this->norm_date(sanitize_text_field($_POST['range_to'] ?? ''));
 
     if (!$post_id) wp_send_json_error(['msg'=>'Please save the tour/package before managing time slots.']);
     if (!current_user_can('edit_post', $post_id)) wp_send_json_error(['msg'=>'No permission.']);
-    if (!$date) wp_send_json_error(['msg'=>'Invalid date.']);
+
+    $dates = [];
+    if ($range_from && $range_to) {
+      try {
+        $start = new DateTime($range_from);
+        $end = new DateTime($range_to);
+      } catch (Exception $e) {
+        wp_send_json_error(['msg' => 'Invalid date range provided.']);
+      }
+
+      if ($start > $end) {
+        wp_send_json_error(['msg' => '"From" date must be before "To" date.']);
+      }
+
+      $iter = clone $start;
+      while ($iter <= $end) {
+        $dates[] = $iter->format('Y-m-d');
+        $iter->modify('+1 day');
+      }
+    } elseif ($date) {
+      $dates[] = $date;
+    } else {
+      wp_send_json_error(['msg'=>'Select a specific date or a valid date range.']);
+    }
+
     if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
 
     $rows = $this->db()->get_results(
@@ -264,16 +293,16 @@ final class CT_Turio_Timeslots {
          FROM `{$this->db_table()}`
          WHERE `tour_id`=%d AND `date`=%s
          ORDER BY `time` ASC",
-        $post_id, $date
+        $post_id, $dates[0] ?? $date
       ),
       ARRAY_A
     );
 
     $slots = [];
     foreach ($rows as $r) {
-      $start = $r['time'];
+      $start_time = $r['time'];
       $duration = intval($r['duration']);
-      [$sh,$sm] = array_map('intval', explode(':', $start));
+      [$sh,$sm] = array_map('intval', explode(':', $start_time));
       $end_minutes = ($sh * 60 + $sm + $duration);
       
       if ($end_minutes >= 24 * 60) {
@@ -282,14 +311,14 @@ final class CT_Turio_Timeslots {
       
       $eh = floor($end_minutes / 60);
       $em = $end_minutes % 60;
-      $end = sprintf('%02d:%02d', $eh, $em);
+      $end_time = sprintf('%02d:%02d', $eh, $em);
 
       $slots[] = [
         'id' => intval($r['id']),
-        'date' => $date,
+        'date' => $dates[0] ?? $date,
         'mode' => $r['mode'] ?? 'private',
-        'time' => $start,
-        'end' => $end,
+        'time' => $start_time,
+        'end' => $end_time,
         'duration' => $duration,
         'capacity' => intval($r['capacity']),
         'price' => (float)$r['price'],
@@ -297,14 +326,16 @@ final class CT_Turio_Timeslots {
       ];
     }
 
-    wp_send_json_success(['date' => $date, 'slots' => $slots]);
+    wp_send_json_success(['date' => $dates[0] ?? $date, 'slots' => $slots]);
   }
 
   public function ajax_admin_add_slot() {
     check_ajax_referer('ct_ts_admin_nonce', 'nonce');
 
     $post_id = absint($_POST['post_id'] ?? 0);
-    $date = $this->norm_date(sanitize_text_field($_POST['date'] ?? ''));
+    $date_raw = sanitize_text_field($_POST['date'] ?? '');
+    $date = $this->norm_date($date_raw);
+    $date_list_raw = !empty($_POST['date_list']) ? json_decode(wp_unslash($_POST['date_list']), true) : [];
     $mode = sanitize_text_field($_POST['mode'] ?? 'private');
     $mode = ($mode === 'shared') ? 'shared' : 'private';
 
@@ -318,7 +349,31 @@ final class CT_Turio_Timeslots {
 
     if (!$post_id) wp_send_json_error(['msg'=>'Please save the tour/package before adding time slots.']);
     if (!current_user_can('edit_post', $post_id)) wp_send_json_error(['msg'=>'No permission.']);
-    if (!$date) wp_send_json_error(['msg'=>'Invalid date.']);
+
+    $dates = [];
+    if (is_array($date_list_raw) && !empty($date_list_raw)) {
+      foreach ($date_list_raw as $candidate) {
+        $normalized = $this->norm_date(sanitize_text_field($candidate));
+        if ($normalized) {
+          $dates[] = $normalized;
+        }
+      }
+    }
+
+    if (empty($dates)) {
+      if ($date) {
+        $dates[] = $date;
+      } else {
+        wp_send_json_error(['msg'=>'Select a specific date or provide a valid date range.']);
+      }
+    }
+
+    $dates = array_values(array_unique($dates));
+
+    if (count($dates) > 366) {
+      wp_send_json_error(['msg'=>'Date range too large. Please add at most 366 days at once.']);
+    }
+
     if (!$start || !$end) wp_send_json_error(['msg'=>'Invalid start or end time.']);
 
     $provided_max = isset($_POST['post_max_people']) && is_numeric($_POST['post_max_people']) ? absint($_POST['post_max_people']) : 0;
@@ -326,7 +381,7 @@ final class CT_Turio_Timeslots {
     $max_people = ($provided_max > 0) ? $provided_max : $meta_max;
 
     if ($mode === 'private') {
-      $capacity = ($max_people > 0) ? $max_people : 1;
+      $capacity = ($max_people >= 0) ? $max_people : 0;
     } else {
       if ($capacity === null || $capacity < 1) $capacity = 1;
       if ($max_people > 0 && $capacity > $max_people) {
@@ -351,34 +406,85 @@ final class CT_Turio_Timeslots {
 
     if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
 
-    try {
-      $inserted = $this->db()->insert(
-        $this->db_table(),
-        [
-          'tour_id' => $post_id,
-          'date' => $date,
-          'time' => $start,
-          'duration' => $dur,
-          'capacity' => $capacity,
-          'booked' => 0,
-          'price' => floatval($final),
-          'mode' => $mode
-        ],
-        ['%d','%s','%s','%d','%d','%d','%f','%s']
-      );
+    $created = [];
+    $duplicates = [];
+    $errors = [];
 
-      if ($inserted === false) {
-        if ($this->db()->last_error && strpos($this->db()->last_error, 'Duplicate') !== false) {
-          wp_send_json_error(['msg' => 'An identical time slot already exists.']);
+    foreach ($dates as $current_date) {
+      try {
+        $inserted = $this->db()->insert(
+          $this->db_table(),
+          [
+            'tour_id' => $post_id,
+            'date' => $current_date,
+            'time' => $start,
+            'duration' => $dur,
+            'capacity' => $capacity,
+            'booked' => 0,
+            'price' => floatval($final),
+            'mode' => $mode
+          ],
+          ['%d','%s','%s','%d','%d','%d','%f','%s']
+        );
+
+        if ($inserted === false) {
+          if ($this->db()->last_error && strpos($this->db()->last_error, 'Duplicate') !== false) {
+            $duplicates[] = $current_date;
+            $this->db()->last_error = '';
+            continue;
+          }
+          $errors[] = [
+            'date' => $current_date,
+            'error' => $this->db()->last_error ?: 'Unknown database error.'
+          ];
         } else {
-          wp_send_json_error(['msg' => 'DB error: ' . $this->db()->last_error]);
+          $created[] = $current_date;
         }
+      } catch (Exception $e) {
+        $errors[] = [
+          'date' => $current_date,
+          'error' => $e->getMessage()
+        ];
       }
-    } catch (Exception $e) {
-      wp_send_json_error(['msg' => 'Error: ' . $e->getMessage()]);
     }
 
-    wp_send_json_success(['ok' => true]);
+    if (empty($created)) {
+      if (!empty($duplicates) && empty($errors)) {
+        wp_send_json_error(['msg' => 'An identical time slot already exists for the selected dates.']);
+      }
+
+      if (!empty($errors)) {
+        $messages = array_map(function($row){
+          return $row['date'] . ': ' . $row['error'];
+        }, $errors);
+        wp_send_json_error(['msg' => 'Error creating slots: ' . implode(' | ', $messages)]);
+      }
+
+      wp_send_json_error(['msg' => 'Unable to create time slots for the selected dates.']);
+    }
+
+    $message = sprintf(
+      'Created %d time slot%s%s.',
+      count($created),
+      count($created) === 1 ? '' : 's',
+      !empty($duplicates) ? sprintf(' (Skipped %d duplicate%s)', count($duplicates), count($duplicates) === 1 ? '' : 's') : ''
+    );
+
+    $response = [
+      'ok' => true,
+      'message' => $message,
+      'created' => count($created),
+      'appliedDates' => $created,
+    ];
+
+    if (!empty($duplicates)) {
+      $response['duplicates'] = $duplicates;
+    }
+    if (!empty($errors)) {
+      $response['errors'] = $errors;
+    }
+
+    wp_send_json_success($response);
   }
 
   public function ajax_admin_delete_slot() {
