@@ -106,24 +106,6 @@ final class CT_Turio_Timeslots {
     echo '<input type="number" min="1" name="ct_max_people" id="ct_max_people" value="'.esc_attr($max_people).'">';
     echo '</label></p>';
 
-    // FIX: Add extras/services management - IMPROVED
-    echo '<hr style="margin: 20px 0;">';
-    echo '<p><label><strong>Add Extras / Services</strong></label></p>';
-    echo '<div id="ct_extras_container" style="background: #f9f9f9; padding: 15px; border-radius: 5px; margin-bottom: 15px;">';
-    
-    if (!empty($extras) && is_array($extras)) {
-        foreach ($extras as $idx => $extra) {
-            echo '<div class="ct-extra-input" style="display: grid; grid-template-columns: 1fr 120px auto; gap: 10px; margin-bottom: 10px; align-items: flex-end; padding: 10px; background: white; border-radius: 3px; border-left: 3px solid #1caf5f;">';
-            echo '<input type="text" name="ct_extras_title[]" value="'.esc_attr($extra['title']).'" placeholder="Service name (e.g., Travel Insurance)" style="padding: 8px; border: 1px solid #ddd; border-radius: 3px;">';
-            echo '<input type="number" step="0.01" name="ct_extras_price[]" value="'.esc_attr($extra['price']).'" placeholder="Price" style="padding: 8px; border: 1px solid #ddd; border-radius: 3px;">';
-            echo '<button type="button" class="button button-secondary ct-remove-extra" style="padding: 8px 15px;">Remove</button>';
-            echo '</div>';
-        }
-    }
-    echo '</div>';
-    
-    echo '<button type="button" class="button button-primary" id="ct-add-extra" style="margin-bottom: 20px;">+ Add Extra</button>';
-
     echo '</div><hr class="ct-hr"/>';
 
     echo '<div id="ct_private_box" class="'.($mode==='shared'?'ct-hide':'').'">';
@@ -198,33 +180,8 @@ final class CT_Turio_Timeslots {
         update_post_meta($post_id, '_ct_max_people', absint($_POST['ct_max_people']));
     }
 
-    // FIX: Save extras/services - MORE ROBUST
-    $extras = [];
-    if (isset($_POST['ct_extras_title']) && is_array($_POST['ct_extras_title'])) {
-        $titles = $_POST['ct_extras_title'];
-        $prices = isset($_POST['ct_extras_price']) ? $_POST['ct_extras_price'] : [];
-        
-        foreach ($titles as $idx => $title) {
-            $title = sanitize_text_field($title);
-            $price = isset($prices[$idx]) ? floatval($prices[$idx]) : 0;
-            
-            if (!empty($title) && $price > 0) {
-                $extras[] = [
-                    'id' => sanitize_key(strtolower($title)),
-                    'title' => $title,
-                    'price' => $price
-                ];
-            }
-        }
-    }
-
-    // Save extras
-    if (!empty($extras)) {
-        update_post_meta($post_id, '_ct_product_extras', $extras);
-        error_log('Saved ' . count($extras) . ' extras for post ' . $post_id);
-    } else {
-        delete_post_meta($post_id, '_ct_product_extras');
-    }
+    // Remove extras saving: intentionally no-op; clean previous data if present
+    delete_post_meta($post_id, '_ct_product_extras');
   }
 
   public function admin_assets($hook) {
@@ -257,46 +214,7 @@ final class CT_Turio_Timeslots {
       'maxPeople' => $max_people,
     ]);
 
-    // Inline script for extras management
-    ?>
-    <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      const addExtraBtn = document.getElementById('ct-add-extra');
-      const extrasContainer = document.getElementById('ct_extras_container');
-      
-      function attachRemoveHandler(btn) {
-        btn.addEventListener('click', function(e) {
-          e.preventDefault();
-          this.closest('.ct-extra-input').remove();
-        });
-      }
-
-      if (addExtraBtn && extrasContainer) {
-        addExtraBtn.addEventListener('click', function(e) {
-          e.preventDefault();
-          const div = document.createElement('div');
-          div.className = 'ct-extra-input';
-          div.style.cssText = 'display: grid; grid-template-columns: 1fr 120px auto; gap: 10px; margin-bottom: 10px; align-items: flex-end; padding: 10px; background: white; border-radius: 3px; border-left: 3px solid #1caf5f;';
-          div.innerHTML = `
-            <input type="text" name="ct_extras_title[]" placeholder="Service name (e.g., Travel Insurance)" style="padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
-            <input type="number" step="0.01" name="ct_extras_price[]" placeholder="Price" style="padding: 8px; border: 1px solid #ddd; border-radius: 3px;">
-            <button type="button" class="button button-secondary ct-remove-extra" style="padding: 8px 15px;">Remove</button>
-          `;
-          extrasContainer.appendChild(div);
-          
-          // Attach handler to new remove button
-          const removeBtn = div.querySelector('.ct-remove-extra');
-          attachRemoveHandler(removeBtn);
-        });
-      }
-      
-      // Handle existing remove buttons
-      document.querySelectorAll('.ct-remove-extra').forEach(btn => {
-        attachRemoveHandler(btn);
-      });
-    });
-    </script>
-    <?php
+    // No inline extras management script (feature removed)
   }
 
   private function norm_date($d) {
