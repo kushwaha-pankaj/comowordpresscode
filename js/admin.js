@@ -74,6 +74,7 @@ jQuery(function($){
   }
 
   function dateToISO(dateObj){
+    if (!(dateObj instanceof Date)) return '';
     var y = dateObj.getFullYear();
     var m = String(dateObj.getMonth() + 1).padStart(2, '0');
     var d = String(dateObj.getDate()).padStart(2, '0');
@@ -103,6 +104,59 @@ jQuery(function($){
       current.setDate(current.getDate() + 1);
     }
     return { ok:true, dates:list };
+  }
+
+  function currentSpecificDate(){
+    return ($('#ct_specific_date').val() || '').trim();
+  }
+
+  function currentRange(){
+    return {
+      from: ($('#ct_date_from').val() || '').trim(),
+      to: ($('#ct_date_to').val() || '').trim()
+    };
+  }
+
+  function updateAddState(options){
+    var opts = options || {};
+
+    if (!HAS_POST_ID){
+      showNeedsPostMessage();
+      return false;
+    }
+
+    var specific = currentSpecificDate();
+    if (specific){
+      var validation = validateSpecificDate(specific);
+      if(!validation.ok){
+        setAddDisabled(true);
+        setDateLabel('');
+        if (opts.updateTable !== false) {
+          $('#ct_slots_table tbody').html('<tr><td colspan="9">'+validation.msg+'</td></tr>');
+        }
+        return false;
+      }
+      setAddDisabled(false);
+      return true;
+    }
+
+    var range = currentRange();
+    if (range.from && range.to){
+      setAddDisabled(false);
+      var label = range.from + ' → ' + range.to;
+      setDateLabel(label);
+      if (opts.updateTable !== false) {
+        $('#ct_slots_table tbody').html('<tr><td colspan="9">Range selected: '+label+'. Add a slot to duplicate across these dates, or pick a specific date to view/edit individual slots.</td></tr>');
+      }
+      return true;
+    }
+
+    setAddDisabled(true);
+    setDateLabel('');
+    if (opts.updateTable !== false) {
+      $('#ct_slots_table tbody').html('<tr><td colspan="9">Pick a specific date or provide a From/To range to view slots…</td></tr>');
+    }
+    return false;
   }
 
   /* ---------- pickers init ---------- */
@@ -300,9 +354,18 @@ jQuery(function($){
       if (dateList.length === 1) {
         fetchSlotsFor(targetDate);
       } else {
-        var rangeMsg = serverMsg || ('Created '+dateList.length+' slots across the selected range. Pick a specific date to review them.');
+        var rangeMsg = serverMsg || ('Created '+dateList.length+' slots across the selected range.');
         toast(rangeMsg);
-        $('#ct_slots_table tbody').html('<tr><td colspan="9">'+rangeMsg+'</td></tr>');
+        if (res.data && res.data.appliedDates && res.data.appliedDates.length) {
+          var options = res.data.appliedDates.map(function(d){
+            return '<option value="'+d+'">'+d+'</option>';
+          }).join('');
+          $('#ct_slots_table tbody').html(
+            '<tr><td colspan="9">'+rangeMsg+'<br><label>Review slots:&nbsp;<select id="ct_slot_range_select"><option value="">Select a date…</option>'+options+'</select></label></td></tr>'
+          );
+        } else {
+          $('#ct_slots_table tbody').html('<tr><td colspan="9">'+rangeMsg+' Pick a specific date to review them.</td></tr>');
+        }
         setDateLabel('');
       }
     }, 'json').fail(function(xhr){
@@ -390,21 +453,29 @@ jQuery(function($){
 
   // When the specific date (or range inputs) change we validate and fetch
   $('#ct_specific_date, #ct_date_from, #ct_date_to').on('change', function(){
-    var date = $('#ct_specific_date').val();
     if (!HAS_POST_ID) {
       showNeedsPostMessage();
       return;
     }
-    var v = validateSpecificDate(date);
-    if(!v.ok){
-      setDateLabel('');
-      // show inline message in table
-      $('#ct_slots_table tbody').html('<tr><td colspan="9">'+v.msg+'</td></tr>');
-      setAddDisabled(true);
+
+    var specific = currentSpecificDate();
+    if (specific){
+      var validation = validateSpecificDate(specific);
+      if(!validation.ok){
+        setAddDisabled(true);
+        setDateLabel('');
+        $('#ct_slots_table tbody').html('<tr><td colspan="9">'+validation.msg+'</td></tr>');
+        return;
+      }
+      var specDate = parseDateInput(specific);
+      var iso = specDate ? dateToISO(specDate) : specific;
+      $('#ct_specific_date').val(iso);
+      setAddDisabled(false);
+      fetchSlotsFor(iso);
       return;
     }
-    // ok
-    fetchSlotsFor(date);
+
+    updateAddState();
   });
 
   $('#ct-add-p-slot').on('click', function(e){
@@ -426,21 +497,31 @@ jQuery(function($){
     }
   });
 
+  $('#ct_slots_table').on('change', '#ct_slot_range_select', function(){
+    var selected = $(this).val();
+    if (!selected) return;
+    $('#ct_specific_date').val(selected);
+    updateAddState({updateTable:false});
+    fetchSlotsFor(selected);
+  });
+
   if (!HAS_POST_ID) {
     showNeedsPostMessage();
     return;
   }
 
   // initial load
-  var pre = $('#ct_specific_date').val();
+  var pre = currentSpecificDate();
   if (pre) {
     var v = validateSpecificDate(pre);
-    if(v.ok) fetchSlotsFor(pre);
-    else {
+    if(v.ok) {
+      var iso = dateToISO(parseDateInput(pre));
+      fetchSlotsFor(iso || pre);
+    } else {
       $('#ct_slots_table tbody').html('<tr><td colspan="9">'+v.msg+'</td></tr>');
       setAddDisabled(true);
     }
   } else {
-    setAddDisabled(true);
+    updateAddState();
   }
 });

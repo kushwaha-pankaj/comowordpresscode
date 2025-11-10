@@ -104,14 +104,14 @@ final class CT_Turio_Timeslots {
 
     echo '<p><label><strong>Bookings available (inventory)</strong><br>';
     echo '<input type="number" min="0" name="ct_max_people" id="ct_max_people" value="'.esc_attr($max_people).'" placeholder="How many times can this tour be booked?">';
-    echo '<span class="description">For private slots this becomes the slot capacity. Shared slots cannot exceed this number.</span>';
+    echo '<span class="description" style="display:block;margin-top:4px;max-width:360px;">Private slots use this number as their capacity. Shared slots cannot exceed it.</span>';
     echo '</label></p>';
 
     echo '</div><hr class="ct-hr"/>';
 
     echo '<div id="ct_private_box" class="'.($mode==='shared'?'ct-hide':'').'">';
     echo '<h3>Private – Time Slots & Pricing</h3>';
-    echo '<p class="description">Tip: leave “Specific Date” empty to duplicate this slot across the selected date range.</p>';
+    echo '<p class="description" style="max-width:360px;">Tip: leave “Specific Date” empty to duplicate this slot across the selected date range.</p>';
     echo '<div class="ct-row">';
     echo '<input type="text" id="ct_p_start" class="ct-time" placeholder="Start (07:00)">';
     echo '<input type="text" id="ct_p_end" class="ct-time" placeholder="End (09:00)">';
@@ -124,7 +124,7 @@ final class CT_Turio_Timeslots {
 
     echo '<div id="ct_shared_box" class="'.($mode==='private'?'ct-hide':'').'">';
     echo '<h3>Shared – Time Slots & Pricing</h3>';
-    echo '<p class="description">Inventory above limits how many shared slots you can sell overall. Use capacity below for seats available in this specific slot.</p>';
+    echo '<p class="description" style="max-width:360px;">Inventory above limits how many shared slots you can sell overall. Use capacity below for seats available in this slot.</p>';
     echo '<div class="ct-row">';
     echo '<input type="text" id="ct_s_start" class="ct-time" placeholder="Start (10:00)">';
     echo '<input type="text" id="ct_s_end" class="ct-time" placeholder="End (11:00)">';
