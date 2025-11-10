@@ -49,17 +49,3 @@ add_filter('body_class', function ($classes) {
     }
     return $classes;
 });
-
-add_action('wp_footer', function () {
-    if (!is_singular('turio-package')) return;
-    static $ct_ts_booking_bar_rendered = false;
-    if ($ct_ts_booking_bar_rendered) return;
-    $ct_ts_booking_bar_rendered = true;
-
-    echo '<div id="ct-booking-sticky" class="ct-booking-sticky" role="region" aria-label="' . esc_attr__('Book this experience', 'comotour') . '">';
-    echo '<div class="ct-booking-sticky-inner">';
-    echo '<span class="ct-booking-summary">' . esc_html__('Select your date & time to book this experience', 'comotour') . '</span>';
-    echo '<a class="ct-booking-button" href="#ct-booking-card">' . esc_html__('Book This Experience', 'comotour') . '</a>';
-    echo '</div>';
-    echo '</div>';
-}, 20);
