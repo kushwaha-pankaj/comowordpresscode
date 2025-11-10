@@ -663,7 +663,7 @@ body.ct-ts-single {
 }
 
 body.logged-in.admin-bar .header-area.sticky {
-  margin-top: 32px !important;
+  margin-top: 0px !important;
   position: fixed;
 }
 
