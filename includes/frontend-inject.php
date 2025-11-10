@@ -49,3 +49,13 @@ add_filter('body_class', function ($classes) {
     }
     return $classes;
 });
+
+add_action('wp_footer', function () {
+    if (!is_singular('turio-package')) return;
+    static $ct_ts_mobile_btn_rendered = false;
+    if ($ct_ts_mobile_btn_rendered) return;
+    $ct_ts_mobile_btn_rendered = true;
+    echo '<div class="ct-mobile-book-bar" role="region" aria-label="Book this experience">';
+    echo '<a class="ct-mobile-book-button" href="#ct-booking-card">'.esc_html__('Book This Experience', 'comotour').'</a>';
+    echo '</div>';
+}, 20);

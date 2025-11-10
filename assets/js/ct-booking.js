@@ -173,9 +173,7 @@
             capacity: s.capacity,
             booked: s.booked,
             remaining: remaining,
-            duration: s.duration,
-            end: s.end,
-            time: s.time
+            duration: s.duration
           };
           if (selectedIso) selectedIso.textContent = ctx.selectedDate;
           
@@ -198,7 +196,6 @@
   function loadSlots(date){
     ctx.selectedDate = date;
     if (selectedIso) selectedIso.textContent = date;
-    updateStickySummary();
     var url = restBase() + '/slots?post_id=' + ctx.postId + '&date=' + date + '&mode=' + ctx.mode;
     
     fetch(url, { credentials: 'same-origin' })
@@ -310,8 +307,7 @@
     if (maxDisplay) maxDisplay.textContent = ctx.maxPeople;
     peopleInput.value = 1;
     updateHeader(); 
-    calcTotal();
-    updateStickySummary();
+    calcTotal(); 
   });
 
   // Allow deselecting time slot by clicking again
@@ -340,13 +336,13 @@
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', function(){ 
       updateHeader(); 
-      calcTotal();
+      calcTotal(); 
       initCalendar();
     });
   } else {
     setTimeout(function(){ 
       updateHeader(); 
-      calcTotal();
+      calcTotal(); 
       initCalendar();
     }, 100);
   }
