@@ -197,3 +197,41 @@ add_action('woocommerce_checkout_create_order_line_item', function ($item, $cart
 add_filter('woocommerce_add_to_cart_redirect', function ($url) {
   return function_exists('wc_get_cart_url') ? wc_get_cart_url() : $url;
 });
+
+/* 6) Customize "Return to shop" button */
+add_filter('woocommerce_return_to_shop_text', function ($text) {
+  return __('Back to Experiences', 'comotour');
+});
+
+add_filter('woocommerce_return_to_shop_redirect', function ($url) {
+  $experiences_url = '';
+
+  if (post_type_exists('turio-package')) {
+    $archive_url = get_post_type_archive_link('turio-package');
+    if ($archive_url) {
+      $experiences_url = $archive_url;
+    }
+  }
+
+  if (!$experiences_url) {
+    $experiences_page = get_page_by_path('experiences');
+    if ($experiences_page) {
+      $experiences_url = get_permalink($experiences_page);
+    }
+  }
+
+  if (!$experiences_url) {
+    $page_id = wc_get_page_id('shop');
+    if ($page_id > 0) {
+      $experiences_url = get_permalink($page_id);
+    } else {
+      $experiences_url = wc_get_page_permalink('shop');
+    }
+  }
+
+  if (!$experiences_url) {
+    $experiences_url = home_url('/');
+  }
+
+  return $experiences_url;
+}, 10, 1);
