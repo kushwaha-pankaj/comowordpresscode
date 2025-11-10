@@ -219,19 +219,50 @@ jQuery(function($){
       return;
     }
 
+    // Convert date to ISO format (Y-m-d) for the AJAX call
+    var dateObj = parseDateInput(date);
+    if (!dateObj) {
+      $('#ct_slots_table tbody').html('<tr><td colspan="9">Invalid date format.</td></tr>');
+      setAddDisabled(true);
+      return;
+    }
+    var isoDate = dateToISO(dateObj);
+    if (!isoDate) {
+      $('#ct_slots_table tbody').html('<tr><td colspan="9">Could not convert date to ISO format.</td></tr>');
+      setAddDisabled(true);
+      return;
+    }
+
     setAddDisabled(false);
 
     $.post(CT_TS_ADMIN.ajax, {
       action:'ct_admin_get_slots_by_date',
       nonce: CT_TS_ADMIN.nonce,
       post_id: POST_ID,
-      date: date
+      date: isoDate
     }, function(res){
       console.log('ct_admin_get_slots_by_date response:', res);
-      if(!res || !res.success){ renderRows([]); return; }
+      if(!res || !res.success){ 
+        var errorMsg = (res && res.data && res.data.msg) ? res.data.msg : 'Error fetching slots.';
+        $('#ct_slots_table tbody').html('<tr><td colspan="9">'+errorMsg+'</td></tr>');
+        renderRows([]); 
+        return; 
+      }
       renderRows(res.data.slots||[]);
     }, 'json').fail(function(xhr, status, err){
       console.error('AJAX fetchSlotsFor failed', status, err, xhr.responseText);
+      var errorMsg = 'AJAX error fetching slots.';
+      if (xhr.responseText) {
+        try {
+          var errorData = JSON.parse(xhr.responseText);
+          if (errorData.data && errorData.data.msg) {
+            errorMsg = errorData.data.msg;
+          }
+        } catch(e) {
+          // Use default error message
+        }
+      }
+      $('#ct_slots_table tbody').html('<tr><td colspan="9">'+errorMsg+'</td></tr>');
       toast('AJAX error fetching slots. See console (F12) for details.');
     });
   }

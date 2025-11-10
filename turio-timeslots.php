@@ -339,9 +339,18 @@ final class CT_Turio_Timeslots {
         $iter->modify('+1 day');
       }
     } elseif ($date) {
+      // Validate that date was normalized successfully
+      if (empty($date)) {
+        wp_send_json_error(['msg'=>'Invalid date format. Please use YYYY-MM-DD format.']);
+      }
       $dates[] = $date;
     } else {
       wp_send_json_error(['msg'=>'Select a specific date or a valid date range.']);
+    }
+    
+    // Ensure we have at least one date
+    if (empty($dates)) {
+      wp_send_json_error(['msg'=>'No valid date provided.']);
     }
 
     $slots = [];
