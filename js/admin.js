@@ -60,18 +60,8 @@ jQuery(function($){
     return { ok:true };
   }
 
-  var HAS_POST_ID = typeof CT_TS_ADMIN !== 'undefined' && parseInt(CT_TS_ADMIN.postId || '0', 10) > 0;
-
-  function requirePostId(message){
-    if (HAS_POST_ID) return true;
-    toast(message || 'Please save the tour/package (Save Draft or Publish) before managing time slots.');
-    return false;
-  }
-
-  function showNeedsPostMessage(){
-    setAddDisabled(true);
-    $('#ct_slots_table tbody').html('<tr><td colspan="9">Save the tour/package (Save Draft or Publish) before managing time slots.</td></tr>');
-  }
+  // Note: post_id can be 0 for unsaved posts - slots will be stored in transient until post is saved
+  var POST_ID = typeof CT_TS_ADMIN !== 'undefined' ? parseInt(CT_TS_ADMIN.postId || '0', 10) : 0;
 
   function dateToISO(dateObj){
     if (!(dateObj instanceof Date)) return '';
@@ -119,11 +109,6 @@ jQuery(function($){
 
   function updateAddState(options){
     var opts = options || {};
-
-    if (!HAS_POST_ID){
-      showNeedsPostMessage();
-      return false;
-    }
 
     var specific = currentSpecificDate();
     if (specific){
@@ -226,11 +211,6 @@ jQuery(function($){
       return;
     }
 
-    if (!HAS_POST_ID) {
-      showNeedsPostMessage();
-      return;
-    }
-
     // run validation to ensure date is acceptable before fetching
     var v = validateSpecificDate(date);
     if(!v.ok){
@@ -244,7 +224,7 @@ jQuery(function($){
     $.post(CT_TS_ADMIN.ajax, {
       action:'ct_admin_get_slots_by_date',
       nonce: CT_TS_ADMIN.nonce,
-      post_id: CT_TS_ADMIN.postId,
+      post_id: POST_ID,
       date: date
     }, function(res){
       console.log('ct_admin_get_slots_by_date response:', res);
@@ -279,10 +259,6 @@ jQuery(function($){
 
   // Add private slot: send capacity = maxPeople (from localized var or input)
   function addPrivateSlot(){
-    if (!HAS_POST_ID) {
-      requirePostId('Please save the tour/package before adding time slots.');
-      return;
-    }
     var specificRaw = $('#ct_specific_date').val().trim();
     var dateList = [];
     var targetDate = '';
@@ -324,7 +300,7 @@ jQuery(function($){
     $.post(CT_TS_ADMIN.ajax, {
       action: 'ct_admin_add_slot',
       nonce:  CT_TS_ADMIN.nonce,
-      post_id:CT_TS_ADMIN.postId,
+      post_id:POST_ID,
       date:   targetDate,
       date_list: JSON.stringify(dateList),
       mode:   mode,
@@ -375,10 +351,6 @@ jQuery(function($){
   }
 
   function addSharedSlot(){
-    if (!HAS_POST_ID) {
-      requirePostId('Please save the tour/package before adding time slots.');
-      return;
-    }
     var date = $('#ct_specific_date').val();
     var validation = validateSpecificDate(date);
     if(!validation.ok){ toast(validation.msg); return; }
@@ -398,7 +370,7 @@ jQuery(function($){
     $.post(CT_TS_ADMIN.ajax, {
       action: 'ct_admin_add_slot',
       nonce:  CT_TS_ADMIN.nonce,
-      post_id:CT_TS_ADMIN.postId,
+      post_id:POST_ID,
       date:   date,
       mode:   mode,
       start:  start,
@@ -426,15 +398,11 @@ jQuery(function($){
   }
 
   function deleteSlot(id){
-    if (!HAS_POST_ID) {
-      requirePostId('Please save the tour/package before deleting time slots.');
-      return;
-    }
     var date = $('#ct_specific_date').val();
     $.post(CT_TS_ADMIN.ajax, {
       action:'ct_admin_delete_slot',
       nonce: CT_TS_ADMIN.nonce,
-      post_id: CT_TS_ADMIN.postId,
+      post_id: POST_ID,
       slot_id: id
     }, function(res){
       console.log('ct_admin_delete_slot response:', res);
@@ -453,11 +421,6 @@ jQuery(function($){
 
   // When the specific date (or range inputs) change we validate and fetch
   $('#ct_specific_date, #ct_date_from, #ct_date_to').on('change', function(){
-    if (!HAS_POST_ID) {
-      showNeedsPostMessage();
-      return;
-    }
-
     var specific = currentSpecificDate();
     if (specific){
       var validation = validateSpecificDate(specific);
@@ -504,11 +467,6 @@ jQuery(function($){
     updateAddState({updateTable:false});
     fetchSlotsFor(selected);
   });
-
-  if (!HAS_POST_ID) {
-    showNeedsPostMessage();
-    return;
-  }
 
   // initial load
   var pre = currentSpecificDate();

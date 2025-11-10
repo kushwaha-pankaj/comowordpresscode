@@ -185,6 +185,62 @@ final class CT_Turio_Timeslots {
 
     // Remove extras saving: intentionally no-op; clean previous data if present
     delete_post_meta($post_id, '_ct_product_extras');
+    
+    // Migrate temporary slots from transient to database
+    $user_id = get_current_user_id();
+    $temp_key = '_ct_timeslots_temp_' . $user_id;
+    $temp_slots = get_transient($temp_key);
+    
+    if ($temp_slots !== false && is_array($temp_slots) && !empty($temp_slots)) {
+      if ($this->ensure_table_exists()) {
+        $migrated = 0;
+        $skipped = 0;
+        
+        foreach ($temp_slots as $slot_key => $slot_data) {
+          try {
+            // Check for duplicates
+            $existing = $this->db()->get_var($this->db()->prepare(
+              "SELECT COUNT(*) FROM `{$this->db_table()}` 
+               WHERE `tour_id`=%d AND `date`=%s AND `time`=%s AND `duration`=%d",
+              $post_id,
+              $slot_data['date'],
+              $slot_data['time'],
+              $slot_data['duration']
+            ));
+            
+            if ($existing > 0) {
+              $skipped++;
+              continue;
+            }
+            
+            $inserted = $this->db()->insert(
+              $this->db_table(),
+              [
+                'tour_id' => $post_id,
+                'date' => $slot_data['date'],
+                'time' => $slot_data['time'],
+                'duration' => $slot_data['duration'],
+                'capacity' => $slot_data['capacity'],
+                'booked' => $slot_data['booked'],
+                'price' => $slot_data['price'],
+                'mode' => $slot_data['mode']
+              ],
+              ['%d','%s','%s','%d','%d','%d','%f','%s']
+            );
+            
+            if ($inserted !== false) {
+              $migrated++;
+            }
+          } catch (Exception $e) {
+            // Log error but continue migration
+            error_log('CT Timeslots: Error migrating slot: ' . $e->getMessage());
+          }
+        }
+        
+        // Clear temporary slots after migration
+        delete_transient($temp_key);
+      }
+    }
   }
 
   public function admin_assets($hook) {
@@ -258,8 +314,11 @@ final class CT_Turio_Timeslots {
     $range_from = $this->norm_date(sanitize_text_field($_POST['range_from'] ?? ''));
     $range_to = $this->norm_date(sanitize_text_field($_POST['range_to'] ?? ''));
 
-    if (!$post_id) wp_send_json_error(['msg'=>'Please save the tour/package before managing time slots.']);
-    if (!current_user_can('edit_post', $post_id)) wp_send_json_error(['msg'=>'No permission.']);
+    $is_unsaved = ($post_id === 0);
+    
+    if (!$is_unsaved && !current_user_can('edit_post', $post_id)) {
+      wp_send_json_error(['msg'=>'No permission.']);
+    }
 
     $dates = [];
     if ($range_from && $range_to) {
@@ -285,45 +344,94 @@ final class CT_Turio_Timeslots {
       wp_send_json_error(['msg'=>'Select a specific date or a valid date range.']);
     }
 
-    if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
-
-    $rows = $this->db()->get_results(
-      $this->db()->prepare(
-        "SELECT `id`, `time`, `duration`, `capacity`, `price`, `booked`, `mode`
-         FROM `{$this->db_table()}`
-         WHERE `tour_id`=%d AND `date`=%s
-         ORDER BY `time` ASC",
-        $post_id, $dates[0] ?? $date
-      ),
-      ARRAY_A
-    );
-
     $slots = [];
-    foreach ($rows as $r) {
-      $start_time = $r['time'];
-      $duration = intval($r['duration']);
-      [$sh,$sm] = array_map('intval', explode(':', $start_time));
-      $end_minutes = ($sh * 60 + $sm + $duration);
+    
+    if ($is_unsaved) {
+      // Read from user-specific transient
+      $user_id = get_current_user_id();
+      $meta_key = '_ct_timeslots_temp_' . $user_id;
+      $temp_slots = get_transient($meta_key);
+      if ($temp_slots === false) {
+        $temp_slots = [];
+      }
+      $target_date = $dates[0] ?? $date;
       
-      if ($end_minutes >= 24 * 60) {
-        $end_minutes = $end_minutes % (24*60);
+      foreach ($temp_slots as $slot_key => $slot_data) {
+        if ($slot_data['date'] === $target_date) {
+          $start_time = $slot_data['time'];
+          $duration = intval($slot_data['duration']);
+          [$sh,$sm] = array_map('intval', explode(':', $start_time));
+          $end_minutes = ($sh * 60 + $sm + $duration);
+          
+          if ($end_minutes >= 24 * 60) {
+            $end_minutes = $end_minutes % (24*60);
+          }
+          
+          $eh = floor($end_minutes / 60);
+          $em = $end_minutes % 60;
+          $end_time = sprintf('%02d:%02d', $eh, $em);
+          
+          // Use a negative ID to indicate it's from temp storage
+          $slots[] = [
+            'id' => -abs(crc32($slot_key)), // Negative ID for temp slots
+            'date' => $target_date,
+            'mode' => $slot_data['mode'] ?? 'private',
+            'time' => $start_time,
+            'end' => $end_time,
+            'duration' => $duration,
+            'capacity' => intval($slot_data['capacity']),
+            'price' => (float)$slot_data['price'],
+            'booked' => intval($slot_data['booked']),
+            '_temp_key' => $slot_key // Store key for deletion
+          ];
+        }
       }
       
-      $eh = floor($end_minutes / 60);
-      $em = $end_minutes % 60;
-      $end_time = sprintf('%02d:%02d', $eh, $em);
+      // Sort by time
+      usort($slots, function($a, $b) {
+        return strcmp($a['time'], $b['time']);
+      });
+    } else {
+      // Read from database
+      if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
 
-      $slots[] = [
-        'id' => intval($r['id']),
-        'date' => $dates[0] ?? $date,
-        'mode' => $r['mode'] ?? 'private',
-        'time' => $start_time,
-        'end' => $end_time,
-        'duration' => $duration,
-        'capacity' => intval($r['capacity']),
-        'price' => (float)$r['price'],
-        'booked' => intval($r['booked']),
-      ];
+      $rows = $this->db()->get_results(
+        $this->db()->prepare(
+          "SELECT `id`, `time`, `duration`, `capacity`, `price`, `booked`, `mode`
+           FROM `{$this->db_table()}`
+           WHERE `tour_id`=%d AND `date`=%s
+           ORDER BY `time` ASC",
+          $post_id, $dates[0] ?? $date
+        ),
+        ARRAY_A
+      );
+
+      foreach ($rows as $r) {
+        $start_time = $r['time'];
+        $duration = intval($r['duration']);
+        [$sh,$sm] = array_map('intval', explode(':', $start_time));
+        $end_minutes = ($sh * 60 + $sm + $duration);
+        
+        if ($end_minutes >= 24 * 60) {
+          $end_minutes = $end_minutes % (24*60);
+        }
+        
+        $eh = floor($end_minutes / 60);
+        $em = $end_minutes % 60;
+        $end_time = sprintf('%02d:%02d', $eh, $em);
+
+        $slots[] = [
+          'id' => intval($r['id']),
+          'date' => $dates[0] ?? $date,
+          'mode' => $r['mode'] ?? 'private',
+          'time' => $start_time,
+          'end' => $end_time,
+          'duration' => $duration,
+          'capacity' => intval($r['capacity']),
+          'price' => (float)$r['price'],
+          'booked' => intval($r['booked']),
+        ];
+      }
     }
 
     wp_send_json_success(['date' => $dates[0] ?? $date, 'slots' => $slots]);
@@ -347,8 +455,12 @@ final class CT_Turio_Timeslots {
     $promo = is_numeric($_POST['promo'] ?? null) ? floatval($_POST['promo']) : 0.0;
     $disc = is_numeric($_POST['disc'] ?? null) ? floatval($_POST['disc']) : 0.0;
 
-    if (!$post_id) wp_send_json_error(['msg'=>'Please save the tour/package before adding time slots.']);
-    if (!current_user_can('edit_post', $post_id)) wp_send_json_error(['msg'=>'No permission.']);
+    // For unsaved posts (post_id = 0), we'll store in a temporary meta key
+    $is_unsaved = ($post_id === 0);
+    
+    if (!$is_unsaved && !current_user_can('edit_post', $post_id)) {
+      wp_send_json_error(['msg'=>'No permission.']);
+    }
 
     $dates = [];
     if (is_array($date_list_raw) && !empty($date_list_raw)) {
@@ -377,7 +489,7 @@ final class CT_Turio_Timeslots {
     if (!$start || !$end) wp_send_json_error(['msg'=>'Invalid start or end time.']);
 
     $provided_max = isset($_POST['post_max_people']) && is_numeric($_POST['post_max_people']) ? absint($_POST['post_max_people']) : 0;
-    $meta_max = (int)(get_post_meta($post_id, '_ct_max_people', true) ?: 0);
+    $meta_max = $is_unsaved ? 0 : (int)(get_post_meta($post_id, '_ct_max_people', true) ?: 0);
     $max_people = ($provided_max > 0) ? $provided_max : $meta_max;
 
     if ($mode === 'private') {
@@ -404,47 +516,84 @@ final class CT_Turio_Timeslots {
     if ($promo > 0) $final = $promo;
     elseif ($disc > 0) $final = max(0, $price * (1 - ($disc/100)));
 
-    if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
-
     $created = [];
     $duplicates = [];
     $errors = [];
 
-    foreach ($dates as $current_date) {
-      try {
-        $inserted = $this->db()->insert(
-          $this->db_table(),
-          [
-            'tour_id' => $post_id,
-            'date' => $current_date,
-            'time' => $start,
-            'duration' => $dur,
-            'capacity' => $capacity,
-            'booked' => 0,
-            'price' => floatval($final),
-            'mode' => $mode
-          ],
-          ['%d','%s','%s','%d','%d','%d','%f','%s']
-        );
+    if ($is_unsaved) {
+      // Store in user-specific transient for unsaved posts
+      $user_id = get_current_user_id();
+      $meta_key = '_ct_timeslots_temp_' . $user_id;
+      $existing_slots = get_transient($meta_key);
+      if ($existing_slots === false) {
+        $existing_slots = [];
+      }
+      
+      foreach ($dates as $current_date) {
+        $slot_key = $current_date . '_' . $start . '_' . $dur;
+        
+        // Check for duplicates
+        if (isset($existing_slots[$slot_key])) {
+          $duplicates[] = $current_date;
+          continue;
+        }
+        
+        $slot_data = [
+          'date' => $current_date,
+          'time' => $start,
+          'duration' => $dur,
+          'capacity' => $capacity,
+          'booked' => 0,
+          'price' => floatval($final),
+          'mode' => $mode
+        ];
+        
+        $existing_slots[$slot_key] = $slot_data;
+        $created[] = $current_date;
+      }
+      
+      // Store in transient (expires in 24 hours)
+      set_transient($meta_key, $existing_slots, DAY_IN_SECONDS);
+    } else {
+      // Store in database for saved posts
+      if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
+      
+      foreach ($dates as $current_date) {
+        try {
+          $inserted = $this->db()->insert(
+            $this->db_table(),
+            [
+              'tour_id' => $post_id,
+              'date' => $current_date,
+              'time' => $start,
+              'duration' => $dur,
+              'capacity' => $capacity,
+              'booked' => 0,
+              'price' => floatval($final),
+              'mode' => $mode
+            ],
+            ['%d','%s','%s','%d','%d','%d','%f','%s']
+          );
 
-        if ($inserted === false) {
-          if ($this->db()->last_error && strpos($this->db()->last_error, 'Duplicate') !== false) {
-            $duplicates[] = $current_date;
-            $this->db()->last_error = '';
-            continue;
+          if ($inserted === false) {
+            if ($this->db()->last_error && strpos($this->db()->last_error, 'Duplicate') !== false) {
+              $duplicates[] = $current_date;
+              $this->db()->last_error = '';
+              continue;
+            }
+            $errors[] = [
+              'date' => $current_date,
+              'error' => $this->db()->last_error ?: 'Unknown database error.'
+            ];
+          } else {
+            $created[] = $current_date;
           }
+        } catch (Exception $e) {
           $errors[] = [
             'date' => $current_date,
-            'error' => $this->db()->last_error ?: 'Unknown database error.'
+            'error' => $e->getMessage()
           ];
-        } else {
-          $created[] = $current_date;
         }
-      } catch (Exception $e) {
-        $errors[] = [
-          'date' => $current_date,
-          'error' => $e->getMessage()
-        ];
       }
     }
 
@@ -493,24 +642,56 @@ final class CT_Turio_Timeslots {
     $post_id = absint($_POST['post_id'] ?? 0);
     $slot_id = absint($_POST['slot_id'] ?? 0);
 
-    if (!$post_id) wp_send_json_error(['msg'=>'Please save the tour/package before deleting time slots.']);
+    $is_unsaved = ($post_id === 0);
+    
     if (!$slot_id) wp_send_json_error(['msg'=>'Missing slot ID.']);
-    if (!current_user_can('edit_post', $post_id))
+    
+    if (!$is_unsaved && !current_user_can('edit_post', $post_id)) {
       wp_send_json_error(['msg'=>'No permission.']);
-
-    if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
-
-    $deleted = $this->db()->delete(
-      $this->db_table(),
-      ['id' => $slot_id, 'tour_id' => $post_id],
-      ['%d','%d']
-    );
-
-    if ($deleted === false) {
-      wp_send_json_error(['msg' => 'DB error deleting slot.']);
     }
 
-    wp_send_json_success(['ok' => true]);
+    if ($is_unsaved) {
+      // Delete from user-specific transient
+      $user_id = get_current_user_id();
+      $meta_key = '_ct_timeslots_temp_' . $user_id;
+      $temp_slots = get_transient($meta_key);
+      if ($temp_slots === false) {
+        $temp_slots = [];
+      }
+      
+      // Find slot by negative ID (temp slots have negative IDs)
+      $found_key = null;
+      foreach ($temp_slots as $key => $slot_data) {
+        $temp_id = -abs(crc32($key));
+        if ($temp_id == $slot_id) {
+          $found_key = $key;
+          break;
+        }
+      }
+      
+      if ($found_key && isset($temp_slots[$found_key])) {
+        unset($temp_slots[$found_key]);
+        set_transient($meta_key, $temp_slots, DAY_IN_SECONDS);
+        wp_send_json_success(['ok' => true]);
+      } else {
+        wp_send_json_error(['msg' => 'Slot not found in temporary storage.']);
+      }
+    } else {
+      // Delete from database
+      if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
+
+      $deleted = $this->db()->delete(
+        $this->db_table(),
+        ['id' => $slot_id, 'tour_id' => $post_id],
+        ['%d','%d']
+      );
+
+      if ($deleted === false) {
+        wp_send_json_error(['msg' => 'DB error deleting slot.']);
+      }
+
+      wp_send_json_success(['ok' => true]);
+    }
   }
 
   public function increment_booked_count($slot_id, $quantity = 1) {
