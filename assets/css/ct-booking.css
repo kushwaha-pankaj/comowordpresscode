@@ -662,6 +662,11 @@ body.ct-ts-single {
   font-size: 24px;
 }
 
+body.logged-in.admin-bar .header-area.sticky {
+  margin-top: 32px !important;
+  position: fixed;
+}
+
 /* Hide any book now buttons */
 .ct-book-now {
   display: none !important;
