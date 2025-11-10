@@ -533,6 +533,9 @@ document.addEventListener('DOMContentLoaded', function () {
 
     document.documentElement.style.setProperty('--ct-sticky-offset', topOffset + 'px');
     document.documentElement.style.setProperty('--ct-booking-bar-height', barHeight + 'px');
+    document.body.style.setProperty('--ct-sticky-offset', topOffset + 'px');
+    document.body.style.setProperty('--ct-booking-bar-height', barHeight + 'px');
+    console.log('[CT Booking] offsets', { topOffset: topOffset, barHeight: barHeight });
   }
 
   updateOffsets();
