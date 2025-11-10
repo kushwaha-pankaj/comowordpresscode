@@ -1,0 +1,25 @@
+.ct-hide { display:none !important; }
+
+.ct-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(240px, 1fr));
+  gap: 16px;
+  align-items: end;
+}
+
+.ct-row {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(120px, 1fr));
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.ct-hr {
+  border: 0;
+  border-top: 1px solid #ddd;
+  margin: 16px 0;
+}
+
+#ct_slots_table th, #ct_slots_table td {
+  vertical-align: middle;
+}

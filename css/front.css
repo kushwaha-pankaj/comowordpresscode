@@ -1,0 +1,188 @@
+.ct-timeslots{ margin-top:14px }
+.ct-label{ display:block; margin-bottom:6px; color:#1C294E; font-weight:700 }
+.ct-slot-list{ display:flex; flex-wrap:wrap; gap:8px; margin-bottom:8px }
+.ct-slot{ padding:8px 12px; border-radius:8px; border:1px solid #A6B7C4; background:#D8C3A5; color:#1C294E; font-weight:600 }
+.ct-slot.available{ background:#006D77; color:#fff; border-color:#006D77 }
+.ct-slot.unavailable{ background:#A6B7C4; color:#fff; cursor:not-allowed; opacity:.7 }
+.ct-slot.active{ box-shadow:0 0 0 3px rgba(0,109,119,.25) }
+
+.ct-row{ display:flex; gap:10px; align-items:center; margin:8px 0 }
+.ct-row label{ min-width:140px; color:#1C294E; }
+.ct-row input, .ct-row select, .ct-row textarea{ padding:8px 10px; border:1px solid #e5e7eb; border-radius:6px; width:auto }
+.ct-hr{ height:1px; background:#eee; margin:14px 0 }
+.ct-empty{ color:#666 }
+.ct-hide{ display:none!important }
+
+.ct-timeslots {
+    padding: 20px;
+    border: 1px solid #ddd;
+    margin-top: 20px;
+}
+
+.ct-row {
+    margin-bottom: 10px;
+}
+
+.ct-hr {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+.ct-slot-list {
+    margin-top: 15px;
+}
+
+.ct-slot-list table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
+
+.ct-slot-list th, .ct-slot-list td {
+    border: 1px solid #ddd;
+    padding: 10px;
+    text-align: left;
+}
+
+.ct-slot-list th {
+    background-color: #f8f8f8;
+}
+
+.ct-label {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+/* General Layout */
+.ct-timeslots {
+    font-family: Arial, sans-serif;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: #f9f9f9;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.ct-label {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.ct-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+}
+
+.ct-row input[type="text"],
+.ct-row input[type="number"],
+.ct-row input[type="email"],
+.ct-row input[type="tel"],
+.ct-row select,
+.ct-row textarea {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.ct-row input[type="number"] {
+    width: 100%;
+}
+
+.ct-note {
+    opacity: .8;
+    font-size: 14px;
+    color: #777;
+}
+
+.ct-hr {
+    height: 1px;
+    background: #e5e7eb;
+    margin: 20px 0;
+}
+
+/* Time Slot Table */
+.ct-list {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+}
+
+.ct-list th,
+.ct-list td {
+    padding: 10px;
+    border: 1px solid #e5e7eb;
+    text-align: left;
+}
+
+.ct-list th {
+    background-color: #f2f2f2;
+}
+
+.ct-list tbody tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+.ct-actions .button {
+    margin-right: 6px;
+}
+
+/* Add Slot Form */
+#ct-p-builder {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(100px, 1fr));
+    gap: 12px;
+    margin-top: 20px;
+}
+
+#ct-p-builder input[type="text"],
+#ct-p-builder input[type="number"] {
+    padding: 8px;
+    font-size: 14px;
+}
+
+#ct-p-builder button {
+    grid-column: span 5;
+    padding: 10px;
+    background-color: #007cba;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+#ct-p-builder button:hover {
+    background-color: #005a7f;
+}
+
+/* Remove Button */
+.ct-remove {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    padding: 6px 12px;
+    cursor: pointer;
+    border-radius: 4px;
+}
+
+.ct-remove:hover {
+    background-color: #ff3333;
+}
+
+.ct-remove:focus {
+    outline: none;
+}
+
+/* Specific Date Section */
+#ct_specific_date_box {
+    margin-top: 20px;
+}
+
+#ct_specific_date {
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
