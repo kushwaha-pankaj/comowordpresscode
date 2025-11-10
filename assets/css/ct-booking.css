@@ -79,7 +79,8 @@
 
 /* Plugin-driven layout overrides */
 body.ct-ts-single {
-  /* Variables will be set by JavaScript - no defaults to avoid conflicts */
+  --ct-sticky-offset: 0px;
+  --ct-booking-bar-height: 0px;
 }
 
 .ct-ts-single .booking-form-box > h5 {
@@ -107,8 +108,8 @@ body.ct-ts-single {
 }
 
 .ct-booking-sticky {
-  position: fixed !important;
-  top: var(--ct-sticky-offset, 0px) !important;
+  position: fixed;
+  top: var(--ct-sticky-offset, 0px);
   left: 0;
   right: 0;
   padding: 12px 20px;
@@ -116,12 +117,10 @@ body.ct-ts-single {
   border-bottom: 1px solid rgba(12, 62, 58, 0.08);
   box-shadow: 0 6px 18px rgba(12, 62, 58, 0.12);
   z-index: 1200;
-  display: flex !important;
+  display: flex;
   justify-content: center;
   align-items: center;
   gap: 16px;
-  visibility: visible !important;
-  opacity: 1 !important;
 }
 
 .ct-booking-sticky-inner {
