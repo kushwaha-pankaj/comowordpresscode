@@ -321,9 +321,12 @@ jQuery(function($){
     var disc  = parseFloat($('#ct_p_disc').val()||'0');
     var mode  = $('#ct_mode').val() || 'private';
 
-    // decide capacity: prefer input value (unsaved), else localized value
-    var capacityInventory = getCurrentMaxPeople();
-    if (isNaN(capacityInventory) || capacityInventory < 0) capacityInventory = 0;
+    // Get capacity from input field for private tours
+    var capacity = parseInt($('#ct_p_capacity').val()||'0',10);
+    if (isNaN(capacity) || capacity < 1) {
+      toast('Please enter a capacity (minimum 1 booking).');
+      return;
+    }
 
     if(!start || !end){ toast('Please fill Start and End (HH:MM).'); return; }
     if(price<=0 && promo<=0){ toast('Please enter a Price or Promo.'); return; }
@@ -340,7 +343,7 @@ jQuery(function($){
       price:  price,
       promo:  promo,
       disc:   disc,
-      capacity: capacityInventory,
+      capacity: capacity,
       post_max_people: getCurrentMaxPeople()
     }, function(res){
       console.log('ct_admin_add_slot response:', res);
@@ -357,7 +360,7 @@ jQuery(function($){
       if (serverMsg && dateList.length === 1) {
         toast(serverMsg);
       }
-      $('#ct_p_start,#ct_p_end,#ct_p_price,#ct_p_promo,#ct_p_disc').val('');
+      $('#ct_p_start,#ct_p_end,#ct_p_capacity,#ct_p_price,#ct_p_promo,#ct_p_disc').val('');
       if (dateList.length === 1) {
         fetchSlotsFor(targetDate);
       } else {
@@ -469,6 +472,15 @@ jQuery(function($){
       return;
     }
 
+    updateAddState();
+  });
+
+  $('#ct_clear_specific_date').on('click', function(e){
+    e.preventDefault();
+    $('#ct_specific_date').val('');
+    $('#ct_slots_table tbody').html('<tr><td colspan="9">Pick a date to load time slots…</td></tr>');
+    setDateLabel('');
+    setAddDisabled(true);
     updateAddState();
   });
 

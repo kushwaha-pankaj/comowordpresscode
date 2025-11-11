@@ -99,7 +99,10 @@ final class CT_Turio_Timeslots {
     echo '</p>';
 
     echo '<p><label><strong>Select Specific Date for Time Slots</strong></label><br>';
-    echo '<input type="text" class="ct-date" name="ct_specific_date" id="ct_specific_date" value="" placeholder="YYYY-MM-DD" autocomplete="off">';
+    echo '<div style="display:flex;align-items:center;gap:8px;">';
+    echo '<input type="text" class="ct-date" name="ct_specific_date" id="ct_specific_date" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="flex:1;">';
+    echo '<button type="button" class="button" id="ct_clear_specific_date" style="white-space:nowrap;">Clear</button>';
+    echo '</div>';
     echo '</p>';
 
     echo '<p><label><strong>Bookings available (inventory)</strong><br>';
@@ -111,10 +114,11 @@ final class CT_Turio_Timeslots {
 
     echo '<div id="ct_private_box" class="'.($mode==='shared'?'ct-hide':'').'">';
     echo '<h3>Private – Time Slots & Pricing</h3>';
-    echo '<p class="description" style="max-width:360px;">Tip: leave “Specific Date” empty to duplicate this slot across the selected date range.</p>';
+    echo '<p class="description" style="max-width:360px;">Tip: leave "Specific Date" empty to duplicate this slot across the selected date range. Capacity indicates how many bookings are allowed for this slot.</p>';
     echo '<div class="ct-row">';
     echo '<input type="text" id="ct_p_start" class="ct-time" placeholder="Start (07:00)">';
     echo '<input type="text" id="ct_p_end" class="ct-time" placeholder="End (09:00)">';
+    echo '<input type="number" min="1" id="ct_p_capacity" placeholder="Capacity (bookings)">';
     echo '<input type="number" step="0.01" id="ct_p_price" placeholder="Price €">';
     echo '<input type="number" step="0.01" id="ct_p_promo" placeholder="Promo € (optional)">';
     echo '<input type="number" step="1" id="ct_p_disc" placeholder="Discount % (optional)">';
@@ -502,7 +506,10 @@ final class CT_Turio_Timeslots {
     $max_people = ($provided_max > 0) ? $provided_max : $meta_max;
 
     if ($mode === 'private') {
-      $capacity = ($max_people >= 0) ? $max_people : 0;
+      // For private tours, use the provided capacity if available, otherwise use max_people
+      if ($capacity === null || $capacity < 1) {
+        $capacity = ($max_people >= 0) ? $max_people : 1;
+      }
     } else {
       if ($capacity === null || $capacity < 1) $capacity = 1;
       if ($max_people > 0 && $capacity > $max_people) {
