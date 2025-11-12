@@ -1,0 +1,336 @@
+/* ============================================================================
+   CHECKOUT PAGE STYLING - Redesigned Layout
+   ============================================================================ */
+
+/* Additional Information / Order Notes Section - Redesigned */
+.woocommerce-additional-fields {
+  margin-top: 40px;
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+}
+
+.woocommerce-additional-fields h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #006D77;
+  margin-bottom: 20px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #006D77;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.woocommerce-additional-fields .form-row textarea {
+  width: 100%;
+  min-height: 120px;
+  padding: 16px;
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  font-size: 15px;
+  line-height: 1.6;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.woocommerce-additional-fields .form-row textarea:focus {
+  outline: none;
+  border-color: #006D77;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(0, 109, 119, 0.1);
+}
+
+.woocommerce-additional-fields .form-row label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 10px;
+  display: block;
+  font-size: 15px;
+}
+
+.woocommerce-additional-fields .form-row label::after {
+  content: ' (optional)';
+  font-weight: 400;
+  color: #999;
+  font-size: 13px;
+}
+
+/* Order Review Section - Enhanced */
+#order_review {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+  padding: 30px;
+  margin-bottom: 30px;
+}
+
+#order_review_heading {
+  font-size: 22px;
+  font-weight: 700;
+  color: #006D77;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #006D77;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Payment Section - Integrated into Order Review */
+.woocommerce-checkout #payment {
+  background: #f8f9fa;
+  border-radius: 12px;
+  padding: 25px;
+  margin-top: 30px;
+  border: 1px solid #e8e8e8;
+  position: relative;
+}
+
+.woocommerce-checkout #payment::before {
+  content: 'Payment Method';
+  display: block;
+  font-size: 18px;
+  font-weight: 700;
+  color: #006D77;
+  margin-bottom: 20px;
+  padding-bottom: 12px;
+  border-bottom: 2px solid #e8e8e8;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Ensure payment section appears inside order review */
+#order_review #payment {
+  margin-top: 30px;
+}
+
+.woocommerce-checkout #payment ul.payment_methods {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 20px 0;
+}
+
+.woocommerce-checkout #payment ul.payment_methods li {
+  margin-bottom: 15px;
+  padding: 15px;
+  background: #ffffff;
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.woocommerce-checkout #payment ul.payment_methods li:hover {
+  border-color: #006D77;
+  box-shadow: 0 2px 8px rgba(0, 109, 119, 0.1);
+}
+
+.woocommerce-checkout #payment ul.payment_methods li.wc_payment_method {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.woocommerce-checkout #payment ul.payment_methods li input[type="radio"] {
+  margin-top: 4px;
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  accent-color: #006D77;
+}
+
+.woocommerce-checkout #payment ul.payment_methods li label {
+  font-weight: 600;
+  color: #333;
+  cursor: pointer;
+  flex: 1;
+  font-size: 15px;
+  margin: 0;
+}
+
+.woocommerce-checkout #payment .payment_box {
+  margin-top: 12px;
+  padding: 15px;
+  background: #f0f9fa;
+  border-left: 4px solid #006D77;
+  border-radius: 6px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: #555;
+}
+
+.woocommerce-checkout #payment .payment_box p {
+  margin: 0;
+}
+
+.woocommerce-checkout #payment .payment_box::before {
+  display: none;
+}
+
+/* Place Order Button */
+.woocommerce-checkout #payment #place_order {
+  width: 100%;
+  background-color: #006D77 !important;
+  border-color: #006D77 !important;
+  color: #fff !important;
+  padding: 16px 28px !important;
+  font-size: 18px !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.3s ease !important;
+  box-shadow: 0 2px 8px rgba(0, 109, 119, 0.2) !important;
+  margin-top: 20px !important;
+  height: auto !important;
+}
+
+.woocommerce-checkout #payment #place_order:hover {
+  background-color: #005a63 !important;
+  border-color: #005a63 !important;
+  box-shadow: 0 4px 12px rgba(0, 109, 119, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Terms and Conditions */
+.woocommerce-checkout #payment .terms {
+  margin: 20px 0;
+  padding: 15px;
+  background: #fff3cd;
+  border-left: 4px solid #ffc107;
+  border-radius: 6px;
+}
+
+.woocommerce-checkout #payment .terms label {
+  font-size: 14px;
+  color: #856404;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.woocommerce-checkout #payment .terms input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  cursor: pointer;
+  accent-color: #ffc107;
+}
+
+/* Customer Details Section - Enhanced */
+.customer_details_address {
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8e8e8;
+  padding: 40px;
+}
+
+.woocommerce-billing-fields h3,
+.woocommerce-shipping-fields h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #006D77;
+  margin-bottom: 25px;
+  padding-bottom: 15px;
+  border-bottom: 3px solid #006D77;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Form Fields - Enhanced */
+.woocommerce form .form-row input.input-text,
+.woocommerce form .form-row textarea,
+.woocommerce form .form-row select {
+  border: 2px solid #e8e8e8;
+  border-radius: 8px;
+  padding: 12px 16px;
+  font-size: 15px;
+  transition: all 0.3s ease;
+  background: #fafafa;
+}
+
+.woocommerce form .form-row input.input-text:focus,
+.woocommerce form .form-row textarea:focus,
+.woocommerce form .form-row select:focus {
+  outline: none;
+  border-color: #006D77;
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(0, 109, 119, 0.1);
+}
+
+.woocommerce form .form-row label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 8px;
+  font-size: 14px;
+}
+
+.woocommerce form .form-row label .required {
+  color: #e74c3c;
+  margin-left: 3px;
+}
+
+/* Order Review Table */
+.woocommerce-checkout-review-order table.shop_table {
+  border: none;
+  margin-bottom: 0;
+}
+
+.woocommerce-checkout-review-order table.shop_table th,
+.woocommerce-checkout-review-order table.shop_table td {
+  padding: 12px 0;
+  border-bottom: 1px solid #e8e8e8;
+  font-size: 15px;
+}
+
+.woocommerce-checkout-review-order table.shop_table th {
+  font-weight: 600;
+  color: #333;
+}
+
+.woocommerce-checkout-review-order table.shop_table .order-total th,
+.woocommerce-checkout-review-order table.shop_table .order-total td {
+  border-bottom: none;
+  padding-top: 20px;
+  font-size: 18px;
+  font-weight: 700;
+  color: #006D77;
+}
+
+/* Responsive Design */
+@media (max-width: 991px) {
+  .customer_details_address {
+    padding: 30px 20px;
+  }
+  
+  #order_review {
+    padding: 25px 20px;
+  }
+  
+  .woocommerce-checkout #payment {
+    padding: 20px;
+  }
+}
+
+@media (max-width: 768px) {
+  .woocommerce-additional-fields {
+    padding: 20px;
+  }
+  
+  .woocommerce-additional-fields h3,
+  .woocommerce-billing-fields h3,
+  .woocommerce-shipping-fields h3,
+  #order_review_heading {
+    font-size: 20px;
+  }
+  
+  .woocommerce-checkout #payment #place_order {
+    font-size: 16px !important;
+    padding: 14px 24px !important;
+  }
+}
+

@@ -38,6 +38,14 @@ add_action('wp_enqueue_scripts', function () {
             wp_enqueue_style('ct-cart-css', $url . 'assets/css/ct-cart.css', [], filemtime($cart_css));
         }
     }
+    
+    // Enqueue checkout-specific styles
+    if (function_exists('is_checkout') && is_checkout()) {
+        $checkout_css = $base . 'assets/css/ct-checkout.css';
+        if (file_exists($checkout_css)) {
+            wp_enqueue_style('ct-checkout-css', $url . 'assets/css/ct-checkout.css', [], filemtime($checkout_css));
+        }
+    }
 }, 20);
 
 add_action('egns_tour_booking_form', function() {

@@ -323,7 +323,21 @@ add_filter('woocommerce_add_to_cart_redirect', function ($url) {
   return function_exists('wc_get_cart_url') ? wc_get_cart_url() : $url;
 });
 
-/* 6) Customize "Return to shop" button */
+/* 6) Move payment section into order review area */
+add_action('woocommerce_checkout_order_review', function() {
+  // Payment section will be automatically included by WooCommerce after order review
+}, 20);
+
+/* 7) Enhance additional information field label */
+add_filter('woocommerce_form_field', function($field, $key, $args, $value) {
+  if ($key === 'order_comments') {
+    // Add custom styling class
+    $field = str_replace('class="', 'class="ct-order-notes-field ', $field);
+  }
+  return $field;
+}, 10, 4);
+
+/* 8) Customize "Return to shop" button */
 add_filter('woocommerce_return_to_shop_text', function ($text) {
   return __('Back to Experiences', 'comotour');
 });
