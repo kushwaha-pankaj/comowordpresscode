@@ -90,7 +90,6 @@ final class CT_Turio_Timeslots {
     $mode = get_post_meta($post->ID, '_ct_mode', true) ?: 'private';
     $date_from = get_post_meta($post->ID, '_ct_date_from', true) ?: '';
     $date_to = get_post_meta($post->ID, '_ct_date_to', true) ?: '';
-    $max_people = (int)(get_post_meta($post->ID, '_ct_max_people', true) ?: 8);
     $extras = get_post_meta($post->ID, '_ct_product_extras', true) ?: [];
 
     wp_nonce_field('ct_ts_save_meta', 'ct_ts_nonce');
@@ -109,11 +108,13 @@ final class CT_Turio_Timeslots {
     echo '</div>';
 
     echo '<div>';
-    echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Date Range</label>';
-    echo '<div style="display:flex;gap:10px;">';
-    echo '<div style="flex:1;"><input type="text" class="ct-date" name="ct_date_from" id="ct_date_from" value="'.esc_attr($date_from).'" placeholder="From" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
-    echo '<div style="flex:1;"><input type="text" class="ct-date" name="ct_date_to" id="ct_date_to" value="'.esc_attr($date_to).'" placeholder="To" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Date Range (From)</label>';
+    echo '<input type="text" class="ct-date" name="ct_date_from" id="ct_date_from" value="'.esc_attr($date_from).'" placeholder="YYYY-MM-DD" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;">';
     echo '</div>';
+
+    echo '<div>';
+    echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Date Range (To)</label>';
+    echo '<input type="text" class="ct-date" name="ct_date_to" id="ct_date_to" value="'.esc_attr($date_to).'" placeholder="YYYY-MM-DD" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;">';
     echo '</div>';
 
     echo '<div>';
@@ -122,12 +123,6 @@ final class CT_Turio_Timeslots {
     echo '<input type="text" class="ct-date" name="ct_specific_date" id="ct_specific_date" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="flex:1;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;">';
     echo '<button type="button" class="button" id="ct_clear_specific_date" style="white-space:nowrap;padding:10px 16px;">Clear</button>';
     echo '</div>';
-    echo '</div>';
-
-    echo '<div>';
-    echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Bookings Available (Inventory)</label>';
-    echo '<input type="number" min="0" name="ct_max_people" id="ct_max_people" value="'.esc_attr($max_people).'" placeholder="e.g., 20" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;">';
-    echo '<span class="description" style="display:block;margin-top:6px;font-size:12px;color:#646970;line-height:1.5;">Maximum number of bookings allowed for this tour</span>';
     echo '</div>';
 
     echo '</div></div>';
@@ -233,9 +228,7 @@ final class CT_Turio_Timeslots {
     if (isset($_POST['ct_date_to'])) {
         update_post_meta($post_id, '_ct_date_to', sanitize_text_field($_POST['ct_date_to']));
     }
-    if (isset($_POST['ct_max_people'])) {
-        update_post_meta($post_id, '_ct_max_people', absint($_POST['ct_max_people']));
-    }
+    // Removed ct_max_people - no longer using tour-level inventory
 
     // Remove extras saving: intentionally no-op; clean previous data if present
     delete_post_meta($post_id, '_ct_product_extras');
@@ -325,7 +318,7 @@ final class CT_Turio_Timeslots {
       'ajax' => admin_url('admin-ajax.php'),
       'nonce' => wp_create_nonce('ct_ts_admin_nonce'),
       'postId' => $post_id,
-      'maxPeople' => $max_people,
+      'maxPeople' => 0, // Deprecated - using slot-level max_bookings instead
     ]);
 
     // No inline extras management script (feature removed)
@@ -762,19 +755,16 @@ final class CT_Turio_Timeslots {
 
     if (!$start || !$end) wp_send_json_error(['msg'=>'Invalid start or end time.']);
 
-    $provided_max = isset($_POST['post_max_people']) && is_numeric($_POST['post_max_people']) ? absint($_POST['post_max_people']) : 0;
-    $meta_max = $is_unsaved ? 0 : (int)(get_post_meta($post_id, '_ct_max_people', true) ?: 0);
-    $max_people = ($provided_max > 0) ? $provided_max : $meta_max;
-
+    // No longer using tour-level max_people - each slot manages its own max_bookings
     if ($mode === 'private') {
-      // For private tours, use the provided capacity if available, otherwise use max_people
+      // For private tours, capacity is required
       if ($capacity === null || $capacity < 1) {
-        $capacity = ($max_people >= 0) ? $max_people : 1;
+        wp_send_json_error(['msg' => 'Capacity is required for private tours.']);
       }
     } else {
-      if ($capacity === null || $capacity < 1) $capacity = 1;
-      if ($max_people > 0 && $capacity > $max_people) {
-        wp_send_json_error(['msg' => 'Capacity cannot exceed max people.']);
+      // For shared tours, capacity is required
+      if ($capacity === null || $capacity < 1) {
+        wp_send_json_error(['msg' => 'Capacity is required for shared tours.']);
       }
     }
 

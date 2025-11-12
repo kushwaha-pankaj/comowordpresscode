@@ -290,19 +290,35 @@ jQuery(function($){
     }
     
     $pagination.show();
-    var html = '<div style="display:flex;justify-content:space-between;align-items:center;">';
-    html += '<div>';
+    var html = '<div style="display:flex;justify-content:center;align-items:center;gap:12px;flex-wrap:wrap;">';
+    
+    // Previous button
     if (page > 1) {
-      html += '<button class="button" id="ct-prev-page">← Previous</button> ';
+      html += '<button class="button" id="ct-prev-page" style="padding:10px 20px;font-weight:600;border-radius:6px;transition:all 0.2s;">← Previous</button>';
+    } else {
+      html += '<button class="button" disabled style="padding:10px 20px;opacity:0.5;cursor:not-allowed;border-radius:6px;">← Previous</button>';
     }
-    html += '<span style="margin:0 10px;">Page ' + page + ' of ' + totalPages + '</span>';
-    if (page < totalPages) {
-      html += '<button class="button" id="ct-next-page">Next →</button>';
-    }
+    
+    // Page info
+    html += '<div style="display:flex;align-items:center;gap:8px;padding:8px 16px;background:#f6f7f7;border-radius:6px;font-weight:600;color:#23282d;">';
+    html += '<span>Page</span>';
+    html += '<span style="background:#0073aa;color:#fff;padding:4px 12px;border-radius:4px;min-width:30px;text-align:center;">' + page + '</span>';
+    html += '<span>of</span>';
+    html += '<span style="color:#646970;">' + totalPages + '</span>';
     html += '</div>';
+    
+    // Next button
     if (page < totalPages) {
-      html += '<button class="button button-primary" id="ct-load-more">Load More</button>';
+      html += '<button class="button" id="ct-next-page" style="padding:10px 20px;font-weight:600;border-radius:6px;transition:all 0.2s;">Next →</button>';
+    } else {
+      html += '<button class="button" disabled style="padding:10px 20px;opacity:0.5;cursor:not-allowed;border-radius:6px;">Next →</button>';
     }
+    
+    // Load More button (if not on last page)
+    if (page < totalPages) {
+      html += '<button class="button button-primary" id="ct-load-more" style="padding:10px 24px;font-weight:600;border-radius:6px;margin-left:12px;transition:all 0.2s;">Load More</button>';
+    }
+    
     html += '</div>';
     $pagination.html(html);
   }
@@ -421,16 +437,7 @@ jQuery(function($){
     }
   }
 
-  // helper: current max people (prefers localized value, else input value)
-  function getCurrentMaxPeople(){
-    var maxFromLoc = (typeof CT_TS_ADMIN !== 'undefined' && CT_TS_ADMIN.maxPeople) ? parseInt(CT_TS_ADMIN.maxPeople,10) : 0;
-    var inputMax = parseInt($('#ct_max_people').val()||'0',10);
-    if (inputMax && inputMax > 0) return inputMax;
-    if (maxFromLoc && maxFromLoc > 0) return maxFromLoc;
-    return 0;
-  }
-
-  // Add private slot: send capacity = maxPeople (from localized var or input)
+  // Add private slot
   function addPrivateSlot(){
     var specificRaw = $('#ct_specific_date').val().trim();
     var dateList = [];
@@ -491,8 +498,7 @@ jQuery(function($){
       promo:  promo,
       disc:   disc,
       capacity: capacity,
-      max_bookings: maxBookings,
-      post_max_people: getCurrentMaxPeople()
+      max_bookings: maxBookings
     }, function(res){
       console.log('ct_admin_add_slot response:', res);
       if(!res || !res.success){
@@ -546,8 +552,7 @@ jQuery(function($){
       start:  start,
       end:    end,
       capacity: cap,
-      price:  price,
-      post_max_people: getCurrentMaxPeople()
+      price:  price
     }, function(res){
       console.log('ct_admin_add_slot response:', res);
       if(!res || !res.success){
