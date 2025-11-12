@@ -416,8 +416,41 @@
 
 .ct-slot-btn.ct-slot-selected {
   border-color: #006D77 !important;
-  background: rgba(0, 109, 119, 0.08) !important;
-  box-shadow: 0 4px 12px rgba(0, 109, 119, 0.2);
+  border-width: 3px !important;
+  background: linear-gradient(135deg, rgba(0, 109, 119, 0.12) 0%, rgba(0, 109, 119, 0.08) 100%) !important;
+  box-shadow: 0 6px 20px rgba(0, 109, 119, 0.25), 
+              0 0 0 2px rgba(0, 109, 119, 0.1) !important;
+  transform: translateY(-2px);
+  position: relative;
+}
+
+.ct-slot-btn.ct-slot-selected::before {
+  content: '✓';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 24px;
+  height: 24px;
+  background: #006D77;
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: bold;
+  box-shadow: 0 2px 6px rgba(0, 109, 119, 0.3);
+}
+
+.ct-slot-btn.ct-slot-selected .ct-slot-time {
+  color: #006D77 !important;
+  font-weight: 800;
+}
+
+.ct-slot-btn.ct-slot-selected .ct-slot-price {
+  color: #006D77 !important;
+  font-weight: 900;
+  font-size: 20px;
 }
 
 .ct-slot-btn.ct-slot-unavailable {
@@ -537,9 +570,19 @@
   font-weight: 600;
 }
 
-.ct-step:hover {
+.ct-step:hover:not(:disabled) {
   background: var(--ct-accent);
   color: white;
+}
+
+.ct-step:disabled,
+.ct-step.ct-step-disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  pointer-events: none;
+  background: #f5f5f5 !important;
+  border-color: #ddd !important;
+  color: #999 !important;
 }
 
 #ct_people {

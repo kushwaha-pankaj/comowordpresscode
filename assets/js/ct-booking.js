@@ -420,6 +420,9 @@
         $peopleInput.val(people);
       }
 
+      // Update people control buttons state
+      updatePeopleButtonsState();
+
       // Update hidden fields for form submission
       updateHiddenFields();
       updateTotal();
@@ -466,28 +469,51 @@
       }
     }
 
+    // Update people control buttons state
+    function updatePeopleButtonsState() {
+      if (!selectedSlot) {
+        // Disable buttons when no slot is selected
+        $peopleMinus.prop('disabled', true).addClass('ct-step-disabled');
+        $peoplePlus.prop('disabled', true).addClass('ct-step-disabled');
+      } else {
+        // Enable buttons when slot is selected
+        $peopleMinus.prop('disabled', false).removeClass('ct-step-disabled');
+        $peoplePlus.prop('disabled', false).removeClass('ct-step-disabled');
+        
+        // Disable minus if at minimum (1)
+        if (people <= 1) {
+          $peopleMinus.prop('disabled', true).addClass('ct-step-disabled');
+        }
+        
+        // Disable plus if at maximum capacity
+        const maxPeople = selectedSlot.capacity || 1;
+        if (people >= maxPeople) {
+          $peoplePlus.prop('disabled', true).addClass('ct-step-disabled');
+        }
+      }
+    }
+
     // People controls
     $peopleMinus.on('click', function() {
+      if (!selectedSlot) return; // Prevent action if no slot selected
       if (people > 1) {
         people--;
         $peopleInput.val(people);
+        updatePeopleButtonsState();
         updateHiddenFields();
         updateTotal();
       }
     });
 
     $peoplePlus.on('click', function() {
-      // Get max from selected slot's capacity, or from display if no slot selected
-      let maxPeople = 999;
-      if (selectedSlot && selectedSlot.capacity) {
-        maxPeople = selectedSlot.capacity;
-      } else {
-        maxPeople = parseInt($maxDisplay.text()) || 999;
-      }
+      if (!selectedSlot) return; // Prevent action if no slot selected
+      // Get max from selected slot's capacity
+      const maxPeople = selectedSlot.capacity || 1;
       
       if (people < maxPeople) {
         people++;
         $peopleInput.val(people);
+        updatePeopleButtonsState();
         updateHiddenFields();
         updateTotal();
       }
@@ -510,6 +536,10 @@
       selectedDate = null;
       people = 1;
       $peopleInput.val(people);
+      
+      // Disable people control buttons
+      updatePeopleButtonsState();
+      
       updateHiddenFields();
       updateTotal();
     });
@@ -522,6 +552,7 @@
     // Initialize
     initCalendar();
     loadAllSlotsAndDays(); // Preload all slots for instant response
+    updatePeopleButtonsState(); // Disable buttons initially
   });
 })();
 
