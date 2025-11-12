@@ -252,12 +252,9 @@ jQuery(function($){
         row.append('<td>'+s.capacity+'</td>');
       }
       
-      // Editable Max Bookings column
-      var maxBookingsCell = $('<td class="ct-capacity-edit">');
+      // Max Bookings column (read-only)
       var maxBookingsValue = s.max_bookings || s.capacity || 1;
-      var maxBookingsInput = $('<input type="number" min="1" class="ct-capacity-input" value="'+maxBookingsValue+'" data-slot-id="'+s.id+'" style="width:70px;padding:4px;">');
-      maxBookingsCell.append(maxBookingsInput);
-      row.append(maxBookingsCell);
+      row.append('<td style="text-align:center;font-weight:600;color:#23282d;">'+maxBookingsValue+'</td>');
       
       row.append('<td>'+Number(s.price).toFixed(2)+'</td>');
       row.append('<td>'+(s.booked||0)+'</td>');
@@ -323,18 +320,21 @@ jQuery(function($){
     $pagination.html(html);
   }
 
-  function loadAllSlots(page, append){
+  function loadAllSlots(page, append, loadAll){
     var filterDate = $('#ct_table_date_filter').val().trim();
     var dateObj = filterDate ? parseDateInput(filterDate) : null;
     var isoFilterDate = dateObj ? dateToISO(dateObj) : '';
+    
+    // If loadAll is true, set per_page to a very large number
+    var perPage = loadAll ? 9999 : 10;
     
     $.post(CT_TS_ADMIN.ajax, {
       action:'ct_admin_get_all_slots',
       nonce: CT_TS_ADMIN.nonce,
       post_id: POST_ID,
       filter_date: isoFilterDate,
-      page: page,
-      per_page: 10
+      page: loadAll ? 1 : page,
+      per_page: perPage
     }, function(res){
       if(!res || !res.success){ 
         if (!append) {
@@ -352,7 +352,12 @@ jQuery(function($){
         updateTableHeaders();
       }
       renderRows(res.data.slots || [], append);
-      renderPagination(currentPage, totalPages);
+      // Hide pagination if loading all
+      if (loadAll) {
+        $('#ct_slots_pagination').hide();
+      } else {
+        renderPagination(currentPage, totalPages);
+      }
     }, 'json').fail(function(xhr, status, err){
       console.error('AJAX loadAllSlots failed', status, err, xhr.responseText);
       if (!append) {
@@ -519,7 +524,7 @@ jQuery(function($){
       $('#ct_p_start,#ct_p_end,#ct_p_capacity,#ct_p_max_bookings,#ct_p_price,#ct_p_promo,#ct_p_disc').val('');
       // Reload all slots after adding
       currentPage = 1;
-      loadAllSlots(1, false);
+      loadAllSlots(1, false, false);
     }, 'json').fail(function(xhr){
       console.error('AJAX addPrivateSlot failed', xhr.responseText);
       toast('AJAX error adding slot. See console (F12) for details.');
@@ -571,7 +576,7 @@ jQuery(function($){
       $('#ct_s_start,#ct_s_end,#ct_s_capacity,#ct_s_max_bookings,#ct_s_price').val('');
       // Reload all slots after adding
       currentPage = 1;
-      loadAllSlots(1, false);
+      loadAllSlots(1, false, false);
     }, 'json').fail(function(xhr){
       console.error('AJAX addSharedSlot failed', xhr.responseText);
       toast('AJAX error adding slot. See console (F12) for details.');
@@ -636,7 +641,7 @@ jQuery(function($){
   // Table date filter
   $('#ct_table_date_filter').on('change', function(){
     currentPage = 1;
-    loadAllSlots(1, false);
+    loadAllSlots(1, false, false);
   });
 
   $('#ct_clear_table_filter').on('click', function(e){
@@ -647,79 +652,38 @@ jQuery(function($){
       fp.clear();
     }
     currentPage = 1;
-    loadAllSlots(1, false);
+    loadAllSlots(1, false, false);
   });
 
   // Pagination handlers
   $(document).on('click', '#ct-prev-page', function(e){
     e.preventDefault();
     if (currentPage > 1) {
-      loadAllSlots(currentPage - 1, false);
+      loadAllSlots(currentPage - 1, false, false);
     }
   });
 
   $(document).on('click', '#ct-next-page', function(e){
     e.preventDefault();
     if (currentPage < totalPages) {
-      loadAllSlots(currentPage + 1, false);
+      loadAllSlots(currentPage + 1, false, false);
     }
   });
 
   $(document).on('click', '#ct-load-more', function(e){
     e.preventDefault();
     if (currentPage < totalPages) {
-      loadAllSlots(currentPage + 1, true); // Append mode
+      loadAllSlots(currentPage + 1, true, false); // Append mode
     }
+  });
+  
+  // Load All button handler
+  $(document).on('click', '#ct_load_all_slots', function(e){
+    e.preventDefault();
+    loadAllSlots(1, false, true);
   });
 
-  // Editable capacity
-  $(document).on('blur', '.ct-capacity-input', function(){
-    var $input = $(this);
-    var slotId = parseInt($input.data('slot-id'), 10);
-    var newCapacity = parseInt($input.val(), 10);
-    var oldCapacity = parseInt($input.attr('data-original-value') || $input.val(), 10);
-    
-    if (isNaN(newCapacity) || newCapacity < 1) {
-      $input.val(oldCapacity);
-      toast('Capacity must be at least 1.');
-      return;
-    }
-    
-    if (newCapacity === oldCapacity) {
-      return; // No change
-    }
-    
-    $input.prop('disabled', true);
-    
-    $.post(CT_TS_ADMIN.ajax, {
-      action: 'ct_admin_update_slot_capacity',
-      nonce: CT_TS_ADMIN.nonce,
-      post_id: POST_ID,
-      slot_id: slotId,
-      capacity: newCapacity
-    }, function(res){
-      $input.prop('disabled', false);
-      if (res && res.success) {
-        $input.attr('data-original-value', newCapacity);
-        // Update is done - the input itself shows the value
-        toast('Max bookings updated successfully.');
-      } else {
-        $input.val(oldCapacity);
-        var msg = (res && res.data && res.data.msg) ? res.data.msg : 'Error updating capacity.';
-        toast(msg);
-      }
-    }, 'json').fail(function(){
-      $input.prop('disabled', false);
-      $input.val(oldCapacity);
-      toast('Error updating capacity. Please try again.');
-    });
-  });
-
-  $(document).on('keypress', '.ct-capacity-input', function(e){
-    if (e.which === 13) { // Enter key
-      $(this).blur();
-    }
-  });
+  // Removed editable max bookings functionality - now read-only
 
   // Bulk selection handlers
   $(document).on('change', '#ct_select_all_checkbox', function(){
@@ -810,8 +774,8 @@ jQuery(function($){
     }
   });
 
-  // Initial load - load all slots
-  loadAllSlots(1, false);
+  // Initial load
+  loadAllSlots(1, false, false);
   
   // Also initialize the table date filter picker
   setTimeout(function(){
