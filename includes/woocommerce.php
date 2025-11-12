@@ -67,11 +67,11 @@ add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product
   if ($date)     $cart_item_data['date']     = $date;
   if ($slot_id)  {
     $cart_item_data['slot_id']  = $slot_id;
-    // Also store human-friendly label for reliability
+    // Also store human-friendly label and price for reliability
     global $wpdb;
     $table = $wpdb->prefix . 'turio_timeslots';
     $row = $wpdb->get_row(
-      $wpdb->prepare("SELECT `time`, `duration` FROM `{$table}` WHERE `id` = %d", intval($slot_id)),
+      $wpdb->prepare("SELECT `time`, `duration`, `price` FROM `{$table}` WHERE `id` = %d", intval($slot_id)),
       ARRAY_A
     );
     if ($row && !empty($row['time']) && is_numeric($row['duration'])) {
@@ -80,6 +80,10 @@ add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product
       $eh = floor($endMin / 60);
       $em = $endMin % 60;
       $cart_item_data['slot_label'] = $row['time'] . ' – ' . sprintf('%02d:%02d', $eh, $em);
+      // Store slot price for price calculation
+      if (isset($row['price'])) {
+        $cart_item_data['slot_price'] = floatval($row['price']);
+      }
     }
   }
   if ($mode)     $cart_item_data['mode']     = strtolower($mode);
@@ -94,18 +98,55 @@ add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product
   return $cart_item_data;
 }, 20, 3);
 
-/* 2) Add extras cost to price */
+/* 2) Add slot price, people multiplier, and extras cost to price */
 add_action('woocommerce_before_calculate_totals', function ($cart) {
   if (is_admin() && !defined('DOING_AJAX')) return;
   if (!$cart instanceof WC_Cart) return;
-  foreach ($cart->get_cart() as $k => $item) {
+  
+  foreach ($cart->get_cart() as $cart_item_key => $item) {
     if (empty($item['data']) || !is_object($item['data']) || !method_exists($item['data'], 'get_price')) continue;
-    $base = floatval($item['data']->get_price());
-    $extra_total = 0;
-    if (!empty($item['extras']) && is_array($item['extras'])) {
-      foreach ($item['extras'] as $x) $extra_total += floatval($x['price'] ?? 0);
+    
+    // Get base product price
+    $base_price = floatval($item['data']->get_price());
+    
+    // Get slot price from cart item data (stored when adding to cart)
+    $slot_price = isset($item['slot_price']) ? floatval($item['slot_price']) : 0;
+    
+    // Use slot price if available, otherwise use base price
+    $price = $slot_price > 0 ? $slot_price : $base_price;
+    
+    // Apply people multiplier for private tours
+    $people = isset($item['people']) ? max(1, intval($item['people'])) : 1;
+    $mode = isset($item['mode']) ? strtolower($item['mode']) : 'private';
+    
+    if ($mode === 'private' && $people > 0) {
+      $price = $price * $people;
     }
-    $item['data']->set_price($base + $extra_total);
+    
+    // Add extras cost
+    $extra_total = 0;
+    
+    // Try multiple ways to access extras (WooCommerce might store it differently)
+    $extras = [];
+    if (!empty($item['extras']) && is_array($item['extras'])) {
+      $extras = $item['extras'];
+    } elseif (!empty($item['custom_data']['extras']) && is_array($item['custom_data']['extras'])) {
+      $extras = $item['custom_data']['extras'];
+    }
+    
+    if (!empty($extras)) {
+      foreach ($extras as $extra) {
+        if (is_array($extra) && isset($extra['price'])) {
+          $extra_total += floatval($extra['price']);
+        } elseif (is_numeric($extra)) {
+          $extra_total += floatval($extra);
+        }
+      }
+    }
+    
+    // Set final price (slot price * people + extras)
+    $final_price = $price + $extra_total;
+    $item['data']->set_price($final_price);
   }
 }, 20);
 
