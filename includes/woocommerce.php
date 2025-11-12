@@ -94,6 +94,32 @@ add_filter('woocommerce_add_cart_item_data', function ($cart_item_data, $product
 
   if (!empty($extras))  $cart_item_data['extras']   = array_values($extras);
 
+  // Store tour ID if available (for featured image lookup)
+  $tour_id = null;
+  if (!empty($_REQUEST['tour_id'])) {
+    $tour_id = intval($_REQUEST['tour_id']);
+  } else {
+    // Try to find tour by product ID
+    $tours = get_posts(array(
+      'post_type' => 'turio-package',
+      'meta_query' => array(
+        array(
+          'key' => 'turio_product',
+          'value' => $product_id,
+          'compare' => '='
+        )
+      ),
+      'posts_per_page' => 1,
+      'fields' => 'ids'
+    ));
+    if (!empty($tours)) {
+      $tour_id = $tours[0];
+    }
+  }
+  if ($tour_id) {
+    $cart_item_data['tour_id'] = $tour_id;
+  }
+
   $cart_item_data['unique_key'] = md5(json_encode($cart_item_data) . microtime(true));
   return $cart_item_data;
 }, 20, 3);
@@ -152,56 +178,173 @@ add_action('woocommerce_before_calculate_totals', function ($cart) {
   }
 }, 20);
 
-/* 3) Show data in Cart/Checkout */
-add_filter('woocommerce_get_item_data', function ($item_data, $cart_item) {
-  if (!empty($cart_item['date']))     $item_data[] = ['name'=>__('Date','comotour'),         'value'=>esc_html($cart_item['date'])];
+/* 3) Add featured image to cart items */
+add_filter('woocommerce_cart_item_thumbnail', function($image, $cart_item, $cart_item_key) {
+  // Get product ID
+  $product_id = $cart_item['product_id'];
+  
+  // Try to get tour ID from cart item data
+  $tour_id = null;
+  if (!empty($cart_item['tour_id'])) {
+    $tour_id = intval($cart_item['tour_id']);
+  } elseif (!empty($cart_item['custom_data']['tour_id'])) {
+    $tour_id = intval($cart_item['custom_data']['tour_id']);
+  }
+  
+  // Get featured image from tour or product
+  if ($tour_id && has_post_thumbnail($tour_id)) {
+    $image = get_the_post_thumbnail($tour_id, 'woocommerce_thumbnail', array('class' => 'ct-cart-item-image'));
+  } elseif (has_post_thumbnail($product_id)) {
+    $image = get_the_post_thumbnail($product_id, 'woocommerce_thumbnail', array('class' => 'ct-cart-item-image'));
+  }
+  
+  return $image;
+}, 10, 3);
 
-  // Improve time slot display: show HH:MM – HH:MM rather than numeric ID
+/* 4) Show data in Cart/Checkout with better formatting */
+add_filter('woocommerce_get_item_data', function ($item_data, $cart_item) {
+  // Format date nicely
+  if (!empty($cart_item['date'])) {
+    $date_obj = DateTime::createFromFormat('Y-m-d', $cart_item['date']);
+    $formatted_date = $date_obj ? $date_obj->format('F j, Y') : $cart_item['date'];
+    $item_data[] = [
+      'name' => __('📅 Booking Date', 'comotour'),
+      'value' => '<strong>' . esc_html($formatted_date) . '</strong>',
+      'display' => '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('📅 Booking Date', 'comotour') . ':</span> <strong>' . esc_html($formatted_date) . '</strong></div>'
+    ];
+  }
+  
+  // Improve time slot display
   if (!empty($cart_item['slot_id'])) {
-    // Prefer precomputed label if available
+    $slotLabel = '';
     if (!empty($cart_item['slot_label'])) {
       $slotLabel = esc_html($cart_item['slot_label']);
-      $item_data[] = ['name'=>__('Time Slot','comotour'), 'value'=>$slotLabel];
-      goto after_slot_label;
+    } else {
+      global $wpdb;
+      $table = $wpdb->prefix . 'turio_timeslots';
+      $row = $wpdb->get_row(
+        $wpdb->prepare("SELECT `time`, `duration` FROM `{$table}` WHERE `id` = %d", intval($cart_item['slot_id'])),
+        ARRAY_A
+      );
+      if ($row && !empty($row['time']) && is_numeric($row['duration'])) {
+        list($sh, $sm) = array_map('intval', explode(':', $row['time']));
+        $endMin = ($sh * 60 + $sm + intval($row['duration'])) % (24 * 60);
+        $eh = floor($endMin / 60);
+        $em = $endMin % 60;
+        $slotLabel = esc_html($row['time'] . ' – ' . sprintf('%02d:%02d', $eh, $em));
+      } else {
+        $slotLabel = esc_html($cart_item['slot_id']);
+      }
     }
-
-    $slotLabel = esc_html($cart_item['slot_id']);
-    global $wpdb;
-    $table = $wpdb->prefix . 'turio_timeslots';
-    // Look up slot details safely
-    $row = $wpdb->get_row(
-      $wpdb->prepare("SELECT `time`, `duration` FROM `{$table}` WHERE `id` = %d", intval($cart_item['slot_id'])),
-      ARRAY_A
-    );
-    if ($row && !empty($row['time']) && is_numeric($row['duration'])) {
-      // compute end time
-      list($sh, $sm) = array_map('intval', explode(':', $row['time']));
-      $endMin = ($sh * 60 + $sm + intval($row['duration'])) % (24 * 60);
-      $eh = floor($endMin / 60);
-      $em = $endMin % 60;
-      $end = sprintf('%02d:%02d', $eh, $em);
-      $slotLabel = esc_html($row['time'] . ' – ' . $end);
-    }
-    $item_data[] = ['name'=>__('Time Slot','comotour'), 'value'=>$slotLabel];
-    after_slot_label:;
+    
+    $item_data[] = [
+      'name' => __('🕐 Time Slot', 'comotour'),
+      'value' => '<strong>' . $slotLabel . '</strong>',
+      'display' => '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('🕐 Time Slot', 'comotour') . ':</span> <strong>' . $slotLabel . '</strong></div>'
+    ];
   }
-
-  if (!empty($cart_item['mode']))     $item_data[] = ['name'=>__('Booking Type','comotour'), 'value'=>ucfirst(esc_html($cart_item['mode']))];
-  if (isset($cart_item['adults']))    $item_data[] = ['name'=>__('Adults','comotour'),       'value'=>intval($cart_item['adults'])];
-  if (isset($cart_item['children']))  $item_data[] = ['name'=>__('Children','comotour'),     'value'=>intval($cart_item['children'])];
-  if (isset($cart_item['people']))    $item_data[] = ['name'=>__('People','comotour'),       'value'=>intval($cart_item['people'])];
-
+  
+  // Booking type
+  if (!empty($cart_item['mode'])) {
+    $mode_label = ucfirst(esc_html($cart_item['mode']));
+    $mode_icon = $cart_item['mode'] === 'private' ? '👥' : '🎫';
+    $item_data[] = [
+      'name' => __('Booking Type', 'comotour'),
+      'value' => '<strong>' . $mode_label . '</strong>',
+      'display' => '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . $mode_icon . ' ' . __('Booking Type', 'comotour') . ':</span> <strong>' . $mode_label . '</strong></div>'
+    ];
+  }
+  
+  // People count
+  if (isset($cart_item['people']) && $cart_item['people'] > 0) {
+    $item_data[] = [
+      'name' => __('👤 Number of People', 'comotour'),
+      'value' => '<strong>' . intval($cart_item['people']) . '</strong>',
+      'display' => '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('👤 Number of People', 'comotour') . ':</span> <strong>' . intval($cart_item['people']) . '</strong></div>'
+    ];
+  }
+  
+  // Extras with better formatting
   if (!empty($cart_item['extras']) && is_array($cart_item['extras'])) {
+    $extras_html = '<div class="ct-cart-extras">';
     foreach ($cart_item['extras'] as $extra) {
       $label = esc_html($extra['label']);
       $price = wc_price(floatval($extra['price']));
-      $item_data[] = ['name'=>sprintf(__('Extra: %s','comotour'), $label),'value'=>'+ '.$price];
+      $extras_html .= '<div class="ct-cart-extra-item">';
+      $extras_html .= '<span class="ct-cart-extra-label">✨ ' . $label . ':</span>';
+      $extras_html .= '<span class="ct-cart-extra-price">+ ' . $price . '</span>';
+      $extras_html .= '</div>';
     }
+    $extras_html .= '</div>';
+    
+    $item_data[] = [
+      'name' => __('Extras', 'comotour'),
+      'value' => $extras_html,
+      'display' => '<div class="ct-cart-meta-section"><strong>' . __('✨ Selected Extras', 'comotour') . '</strong>' . $extras_html . '</div>'
+    ];
   }
+  
   return $item_data;
 }, 10, 2);
 
-/* 4) Persist on Order */
+/* 4.5) Customize cart item data display format */
+add_filter('woocommerce_display_item_meta', function($html, $item, $args) {
+  // Only customize for cart items with our booking data
+  if (empty($item['date']) && empty($item['slot_id'])) {
+    return $html;
+  }
+  
+  $strings = array();
+  $html = '';
+  
+  // Format date
+  if (!empty($item['date'])) {
+    $date_obj = DateTime::createFromFormat('Y-m-d', $item['date']);
+    $formatted_date = $date_obj ? $date_obj->format('F j, Y') : $item['date'];
+    $strings[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">📅 ' . __('Booking Date', 'comotour') . ':</span> <strong>' . esc_html($formatted_date) . '</strong></div>';
+  }
+  
+  // Format time slot
+  if (!empty($item['slot_id'])) {
+    $slotLabel = !empty($item['slot_label']) ? esc_html($item['slot_label']) : esc_html($item['slot_id']);
+    $strings[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">🕐 ' . __('Time Slot', 'comotour') . ':</span> <strong>' . $slotLabel . '</strong></div>';
+  }
+  
+  // Format booking type
+  if (!empty($item['mode'])) {
+    $mode_label = ucfirst(esc_html($item['mode']));
+    $mode_icon = $item['mode'] === 'private' ? '👥' : '🎫';
+    $strings[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . $mode_icon . ' ' . __('Booking Type', 'comotour') . ':</span> <strong>' . $mode_label . '</strong></div>';
+  }
+  
+  // Format people count
+  if (isset($item['people']) && $item['people'] > 0) {
+    $strings[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">👤 ' . __('Number of People', 'comotour') . ':</span> <strong>' . intval($item['people']) . '</strong></div>';
+  }
+  
+  // Format extras
+  if (!empty($item['extras']) && is_array($item['extras'])) {
+    $extras_html = '<div class="ct-cart-meta-section"><strong>✨ ' . __('Selected Extras', 'comotour') . '</strong><div class="ct-cart-extras">';
+    foreach ($item['extras'] as $extra) {
+      $label = esc_html($extra['label']);
+      $price = wc_price(floatval($extra['price']));
+      $extras_html .= '<div class="ct-cart-extra-item">';
+      $extras_html .= '<span class="ct-cart-extra-label">✨ ' . $label . ':</span>';
+      $extras_html .= '<span class="ct-cart-extra-price">+ ' . $price . '</span>';
+      $extras_html .= '</div>';
+    }
+    $extras_html .= '</div></div>';
+    $strings[] = $extras_html;
+  }
+  
+  if (!empty($strings)) {
+    $html = '<dl class="variation">' . implode('', $strings) . '</dl>';
+  }
+  
+  return $html;
+}, 10, 3);
+
+/* 5) Persist on Order */
 add_action('woocommerce_checkout_create_order_line_item', function ($item, $cart_item_key, $values) {
   if (!empty($values['date']))     $item->add_meta_data('Date', $values['date']);
   if (!empty($values['slot_id']))  {
