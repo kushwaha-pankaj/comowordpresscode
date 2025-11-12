@@ -194,10 +194,10 @@ jQuery(function($){
     
     if (isShared) {
       headers.push('<th>Seats Available</th>');
-      headers.push('<th>Max Bookings</th>');
+      headers.push('<th style="text-align:center;">Max Bookings</th>');
     } else {
       headers.push('<th>Capacity</th>');
-      headers.push('<th>Max Bookings</th>');
+      headers.push('<th style="text-align:center;">Max Bookings</th>');
     }
     
     headers.push('<th>Price (€)</th>');
@@ -254,7 +254,7 @@ jQuery(function($){
       
       // Max Bookings column (read-only)
       var maxBookingsValue = s.max_bookings || s.capacity || 1;
-      row.append('<td style="text-align:center;font-weight:600;color:#23282d;">'+maxBookingsValue+'</td>');
+      row.append('<td style="text-align:center;font-weight:600;color:#23282d;vertical-align:middle;">'+maxBookingsValue+'</td>');
       
       row.append('<td>'+Number(s.price).toFixed(2)+'</td>');
       row.append('<td>'+(s.booked||0)+'</td>');

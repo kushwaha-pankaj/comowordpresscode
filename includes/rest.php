@@ -97,7 +97,7 @@ function ctts_get_slots(WP_REST_Request $req) {
     }
 
     $rows = $wpdb->get_results($wpdb->prepare("
-        SELECT id, `time`, duration, capacity, booked, price, mode
+        SELECT id, `time`, duration, capacity, booked, price, mode, COALESCE(max_bookings, capacity) as max_bookings
         FROM {$table}
         WHERE tour_id=%d 
           AND `date`=%s
@@ -129,6 +129,7 @@ function ctts_get_slots(WP_REST_Request $req) {
             'duration' => intval($r['duration']),
             'capacity' => intval($r['capacity']),
             'booked' => intval($r['booked']),
+            'max_bookings' => intval($r['max_bookings']),
             'price' => (float)$r['price'],
             'mode' => $r['mode']
         ];

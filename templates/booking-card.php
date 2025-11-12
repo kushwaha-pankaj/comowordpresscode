@@ -122,9 +122,9 @@ if (defined('WP_DEBUG') && WP_DEBUG) {
     <div class="ct-section">
       <div class="ct-section-title">Select Your Date</div>
       <div id="ct_date_inline"></div>
-      <div id="ct_selected_text">
+      <div id="ct_selected_text" style="display:none;margin-top:12px;padding:8px 12px;background:#f0f6fc;border-radius:4px;font-size:13px;">
         Selected: <span id="ct_selected_iso">—</span>
-        <a href="#" id="ct_clear_selected">Clear</a>
+        <a href="#" id="ct_clear_selected" style="margin-left:8px;color:#0073aa;text-decoration:none;">Clear</a>
       </div>
     </div>
 
