@@ -115,15 +115,7 @@ add_action('woocommerce_before_calculate_totals', function ($cart) {
     // Use slot price if available, otherwise use base price
     $price = $slot_price > 0 ? $slot_price : $base_price;
     
-    // Apply people multiplier for private tours
-    $people = isset($item['people']) ? max(1, intval($item['people'])) : 1;
-    $mode = isset($item['mode']) ? strtolower($item['mode']) : 'private';
-    
-    if ($mode === 'private' && $people > 0) {
-      $price = $price * $people;
-    }
-    
-    // Add extras cost
+    // Add extras cost FIRST (before multiplying by people)
     $extra_total = 0;
     
     // Try multiple ways to access extras (WooCommerce might store it differently)
@@ -144,9 +136,19 @@ add_action('woocommerce_before_calculate_totals', function ($cart) {
       }
     }
     
-    // Set final price (slot price * people + extras)
-    $final_price = $price + $extra_total;
-    $item['data']->set_price($final_price);
+    // Add extras to base price
+    $total = $price + $extra_total;
+    
+    // Apply people multiplier for private tours (multiply the total: slot + extras)
+    $people = isset($item['people']) ? max(1, intval($item['people'])) : 1;
+    $mode = isset($item['mode']) ? strtolower($item['mode']) : 'private';
+    
+    if ($mode === 'private' && $people > 0) {
+      $total = $total * $people;
+    }
+    
+    // Set final price
+    $item['data']->set_price($total);
   }
 }, 20);
 
