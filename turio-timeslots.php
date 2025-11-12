@@ -65,6 +65,11 @@ final class CT_Turio_Timeslots {
     if (!$col) {
       $this->db()->query("ALTER TABLE `{$t}` ADD COLUMN `mode` VARCHAR(10) NOT NULL DEFAULT 'private'");
     }
+    // Add max_bookings column if it doesn't exist
+    $max_bookings_col = $this->db()->get_var($this->db()->prepare("SHOW COLUMNS FROM `{$t}` LIKE %s", 'max_bookings'));
+    if (!$max_bookings_col) {
+      $this->db()->query("ALTER TABLE `{$t}` ADD COLUMN `max_bookings` SMALLINT UNSIGNED NOT NULL DEFAULT 1 AFTER `capacity`");
+    }
   }
 
   public function add_metabox_generic($post_type, $post) {
@@ -97,13 +102,14 @@ final class CT_Turio_Timeslots {
     echo '<option value="shared"  '.selected($mode,'shared',false).'>Shared (Per-Seat)</option>';
     echo '</select></label></div>';
 
-    echo '<div><label><strong>Date Range (From)</strong><br>';
+    echo '<div style="display:flex;gap:10px;align-items:flex-end;">';
+    echo '<div style="flex:1;"><label><strong>Date Range (From)</strong><br>';
     echo '<input type="text" class="ct-date" name="ct_date_from" id="ct_date_from" value="'.esc_attr($date_from).'" placeholder="YYYY-MM-DD" style="width:100%;padding:6px;margin-top:5px;">';
     echo '</label></div>';
-
-    echo '<div><label><strong>Date Range (To)</strong><br>';
+    echo '<div style="flex:1;"><label><strong>Date Range (To)</strong><br>';
     echo '<input type="text" class="ct-date" name="ct_date_to" id="ct_date_to" value="'.esc_attr($date_to).'" placeholder="YYYY-MM-DD" style="width:100%;padding:6px;margin-top:5px;">';
     echo '</label></div>';
+    echo '</div>';
 
     echo '<div><label><strong>Select Specific Date for Time Slots</strong><br>';
     echo '<div style="display:flex;align-items:center;gap:8px;margin-top:5px;">';
@@ -121,11 +127,12 @@ final class CT_Turio_Timeslots {
 
     echo '<div id="ct_private_box" class="'.($mode==='shared'?'ct-hide':'').'" style="margin-bottom:20px;padding:15px;background:#f9f9f9;border-radius:4px;">';
     echo '<h3 style="margin-top:0;margin-bottom:10px;font-size:15px;">Private – Time Slots & Pricing</h3>';
-    echo '<p class="description" style="margin-bottom:12px;font-size:13px;color:#666;line-height:1.5;">Tip: leave "Specific Date" empty to duplicate this slot across the selected date range. Capacity indicates how many bookings are allowed for this slot.</p>';
+    echo '<p class="description" style="margin-bottom:12px;font-size:13px;color:#666;line-height:1.5;">Tip: leave "Specific Date" empty to duplicate this slot across the selected date range. Capacity = how many people can fit. Max Bookings = how many times this slot can be booked.</p>';
     echo '<div class="ct-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;">';
     echo '<input type="text" id="ct_p_start" class="ct-time" placeholder="Start (07:00)" style="padding:8px;">';
     echo '<input type="text" id="ct_p_end" class="ct-time" placeholder="End (09:00)" style="padding:8px;">';
-    echo '<input type="number" min="1" id="ct_p_capacity" placeholder="Capacity (bookings)" style="padding:8px;">';
+    echo '<input type="number" min="1" id="ct_p_capacity" placeholder="Capacity (people)" style="padding:8px;">';
+    echo '<input type="number" min="1" id="ct_p_max_bookings" placeholder="Max Bookings" style="padding:8px;">';
     echo '<input type="number" step="0.01" id="ct_p_price" placeholder="Price €" style="padding:8px;">';
     echo '<input type="number" step="0.01" id="ct_p_promo" placeholder="Promo € (optional)" style="padding:8px;">';
     echo '<input type="number" step="1" id="ct_p_disc" placeholder="Discount % (optional)" style="padding:8px;">';
@@ -248,11 +255,12 @@ final class CT_Turio_Timeslots {
                 'time' => $slot_data['time'],
                 'duration' => $slot_data['duration'],
                 'capacity' => $slot_data['capacity'],
+                'max_bookings' => isset($slot_data['max_bookings']) ? $slot_data['max_bookings'] : $slot_data['capacity'],
                 'booked' => $slot_data['booked'],
                 'price' => $slot_data['price'],
                 'mode' => $slot_data['mode']
               ],
-              ['%d','%s','%s','%d','%d','%d','%f','%s']
+              ['%d','%s','%s','%d','%d','%d','%d','%f','%s']
             );
             
             if ($inserted !== false) {
@@ -479,7 +487,7 @@ final class CT_Turio_Timeslots {
     $post_id = absint($_POST['post_id'] ?? 0);
     $filter_date = $this->norm_date(sanitize_text_field($_POST['filter_date'] ?? ''));
     $page = absint($_POST['page'] ?? 1);
-    $per_page = absint($_POST['per_page'] ?? 50);
+    $per_page = absint($_POST['per_page'] ?? 10);
     $offset = ($page - 1) * $per_page;
 
     $is_unsaved = ($post_id === 0);
@@ -526,6 +534,7 @@ final class CT_Turio_Timeslots {
           'end' => $end_time,
           'duration' => $duration,
           'capacity' => intval($slot_data['capacity']),
+          'max_bookings' => isset($slot_data['max_bookings']) ? intval($slot_data['max_bookings']) : intval($slot_data['capacity']),
           'price' => (float)$slot_data['price'],
           'booked' => intval($slot_data['booked']),
           '_temp_key' => $slot_key
@@ -559,7 +568,7 @@ final class CT_Turio_Timeslots {
 
       // Get paginated results
       $rows = $this->db()->get_results($this->db()->prepare(
-        "SELECT `id`, `date`, `time`, `duration`, `capacity`, `price`, `booked`, `mode`
+        "SELECT `id`, `date`, `time`, `duration`, `capacity`, COALESCE(`max_bookings`, `capacity`) as `max_bookings`, `price`, `booked`, `mode`
          FROM `{$this->db_table()}`
          WHERE {$where}
          ORDER BY `date` ASC, `time` ASC
@@ -608,13 +617,14 @@ final class CT_Turio_Timeslots {
     check_ajax_referer('ct_ts_admin_nonce', 'nonce');
 
     $post_id = absint($_POST['post_id'] ?? 0);
-    $slot_id = absint($_POST['slot_id'] ?? 0);
-    $capacity = absint($_POST['capacity'] ?? 0);
+    // Don't use absint() for slot_id - we need to preserve negative IDs for unsaved posts
+    $slot_id = isset($_POST['slot_id']) ? intval($_POST['slot_id']) : 0;
+    $max_bookings = absint($_POST['capacity'] ?? 0); // This is actually max_bookings, not capacity
 
     $is_unsaved = ($post_id === 0);
     
-    if (!$slot_id || $capacity < 1) {
-      wp_send_json_error(['msg'=>'Invalid slot ID or capacity.']);
+    if (!$slot_id || $max_bookings < 1) {
+      wp_send_json_error(['msg'=>'Invalid slot ID or max bookings.']);
     }
     
     if (!$is_unsaved && !current_user_can('edit_post', $post_id)) {
@@ -634,7 +644,7 @@ final class CT_Turio_Timeslots {
       foreach ($temp_slots as $key => $slot_data) {
         $temp_id = -abs(crc32($key));
         if ($temp_id == $slot_id) {
-          $temp_slots[$key]['capacity'] = $capacity;
+          $temp_slots[$key]['max_bookings'] = $max_bookings;
           $found = true;
           break;
         }
@@ -642,7 +652,7 @@ final class CT_Turio_Timeslots {
       
       if ($found) {
         set_transient($meta_key, $temp_slots, DAY_IN_SECONDS);
-        wp_send_json_success(['ok' => true, 'capacity' => $capacity]);
+        wp_send_json_success(['ok' => true, 'max_bookings' => $max_bookings]);
       } else {
         wp_send_json_error(['msg'=>'Slot not found in temporary storage.']);
       }
@@ -652,17 +662,17 @@ final class CT_Turio_Timeslots {
 
       $updated = $this->db()->update(
         $this->db_table(),
-        ['capacity' => $capacity],
+        ['max_bookings' => $max_bookings],
         ['id' => $slot_id, 'tour_id' => $post_id],
         ['%d'],
         ['%d', '%d']
       );
 
       if ($updated === false) {
-        wp_send_json_error(['msg' => 'DB error updating capacity.']);
+        wp_send_json_error(['msg' => 'DB error updating max bookings.']);
       }
 
-      wp_send_json_success(['ok' => true, 'capacity' => $capacity]);
+      wp_send_json_success(['ok' => true, 'max_bookings' => $max_bookings]);
     }
   }
 
@@ -680,6 +690,7 @@ final class CT_Turio_Timeslots {
     $end = $this->norm_time(sanitize_text_field($_POST['end'] ?? ''));
 
     $capacity = isset($_POST['capacity']) && is_numeric($_POST['capacity']) ? absint($_POST['capacity']) : null;
+    $max_bookings = isset($_POST['max_bookings']) && is_numeric($_POST['max_bookings']) ? absint($_POST['max_bookings']) : null;
     $price = is_numeric($_POST['price'] ?? null) ? floatval($_POST['price']) : 0.0;
     $promo = is_numeric($_POST['promo'] ?? null) ? floatval($_POST['promo']) : 0.0;
     $disc = is_numeric($_POST['disc'] ?? null) ? floatval($_POST['disc']) : 0.0;
@@ -789,6 +800,7 @@ final class CT_Turio_Timeslots {
           'time' => $start,
           'duration' => $dur,
           'capacity' => $capacity,
+          'max_bookings' => $max_bookings ?: $capacity, // Default to capacity if not provided
           'booked' => 0,
           'price' => floatval($final),
           'mode' => $mode
@@ -814,11 +826,12 @@ final class CT_Turio_Timeslots {
               'time' => $start,
               'duration' => $dur,
               'capacity' => $capacity,
+              'max_bookings' => $max_bookings ?: $capacity, // Default to capacity if not provided
               'booked' => 0,
               'price' => floatval($final),
               'mode' => $mode
             ],
-            ['%d','%s','%s','%d','%d','%d','%f','%s']
+            ['%d','%s','%s','%d','%d','%d','%d','%f','%s']
           );
 
           if ($inserted === false) {

@@ -253,10 +253,11 @@ jQuery(function($){
       }
       
       // Editable Max Bookings column
-      var capacityCell = $('<td class="ct-capacity-edit">');
-      var capacityInput = $('<input type="number" min="1" class="ct-capacity-input" value="'+s.capacity+'" data-slot-id="'+s.id+'" style="width:70px;padding:4px;">');
-      capacityCell.append(capacityInput);
-      row.append(capacityCell);
+      var maxBookingsCell = $('<td class="ct-capacity-edit">');
+      var maxBookingsValue = s.max_bookings || s.capacity || 1;
+      var maxBookingsInput = $('<input type="number" min="1" class="ct-capacity-input" value="'+maxBookingsValue+'" data-slot-id="'+s.id+'" style="width:70px;padding:4px;">');
+      maxBookingsCell.append(maxBookingsInput);
+      row.append(maxBookingsCell);
       
       row.append('<td>'+Number(s.price).toFixed(2)+'</td>');
       row.append('<td>'+(s.booked||0)+'</td>');
@@ -317,7 +318,7 @@ jQuery(function($){
       post_id: POST_ID,
       filter_date: isoFilterDate,
       page: page,
-      per_page: 50
+      per_page: 10
     }, function(res){
       if(!res || !res.success){ 
         if (!append) {
@@ -462,10 +463,15 @@ jQuery(function($){
     var disc  = parseFloat($('#ct_p_disc').val()||'0');
     var mode  = $('#ct_mode').val() || 'private';
 
-    // Get capacity from input field for private tours
+    // Get capacity and max_bookings from input fields for private tours
     var capacity = parseInt($('#ct_p_capacity').val()||'0',10);
+    var maxBookings = parseInt($('#ct_p_max_bookings').val()||'0',10);
     if (isNaN(capacity) || capacity < 1) {
-      toast('Please enter a capacity (minimum 1 booking).');
+      toast('Please enter a capacity (minimum 1 person).');
+      return;
+    }
+    if (isNaN(maxBookings) || maxBookings < 1) {
+      toast('Please enter max bookings (minimum 1 booking).');
       return;
     }
 
@@ -485,6 +491,7 @@ jQuery(function($){
       promo:  promo,
       disc:   disc,
       capacity: capacity,
+      max_bookings: maxBookings,
       post_max_people: getCurrentMaxPeople()
     }, function(res){
       console.log('ct_admin_add_slot response:', res);
@@ -503,7 +510,7 @@ jQuery(function($){
       } else if (dateList.length > 1) {
         toast('Created ' + dateList.length + ' slots across the selected range.');
       }
-      $('#ct_p_start,#ct_p_end,#ct_p_capacity,#ct_p_price,#ct_p_promo,#ct_p_disc').val('');
+      $('#ct_p_start,#ct_p_end,#ct_p_capacity,#ct_p_max_bookings,#ct_p_price,#ct_p_promo,#ct_p_disc').val('');
       // Reload all slots after adding
       currentPage = 1;
       loadAllSlots(1, false);
@@ -685,18 +692,8 @@ jQuery(function($){
       $input.prop('disabled', false);
       if (res && res.success) {
         $input.attr('data-original-value', newCapacity);
-        // Update the capacity column too (index 6: after checkbox, date, type, start, end, duration, capacity)
-        var mode = currentMode();
-        var isShared = mode === 'shared';
-        var $capacityCell = $input.closest('tr').find('td:eq(6)');
-        if (isShared) {
-          var booked = parseInt($input.closest('tr').find('td:eq(9)').text() || '0', 10);
-          var available = Math.max(0, newCapacity - booked);
-          $capacityCell.html('<strong>'+available+'</strong> / '+newCapacity);
-        } else {
-          $capacityCell.text(newCapacity);
-        }
-        toast('Capacity updated successfully.');
+        // Update is done - the input itself shows the value
+        toast('Max bookings updated successfully.');
       } else {
         $input.val(oldCapacity);
         var msg = (res && res.data && res.data.msg) ? res.data.msg : 'Error updating capacity.';
