@@ -5,58 +5,103 @@
 /* Additional Information / Order Notes Section - Redesigned */
 .woocommerce-additional-fields {
   margin-top: 40px;
-  padding: 30px;
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e8e8e8;
+  padding: 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
 }
 
 .woocommerce-additional-fields h3 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
   color: #006D77;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 3px solid #006D77;
+  margin: 0 0 20px 0;
+  padding: 0;
+  border: none;
+  border-bottom: 2px solid #006D77;
+  padding-bottom: 12px;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1px;
+  position: relative;
+}
+
+.woocommerce-additional-fields h3::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  width: 60px;
+  height: 2px;
+  background: #006D77;
+}
+
+.woocommerce-additional-fields .form-row {
+  margin: 0;
+  padding: 0;
+}
+
+.woocommerce-additional-fields .form-row label {
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 12px;
+  display: block;
+  font-size: 14px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.woocommerce-additional-fields .form-row label abbr.required {
+  display: none;
+}
+
+/* Remove duplicate (optional) text if it exists */
+.woocommerce-additional-fields .form-row label::after {
+  content: '';
+  display: none;
 }
 
 .woocommerce-additional-fields .form-row textarea {
   width: 100%;
-  min-height: 120px;
-  padding: 16px;
-  border: 2px solid #e8e8e8;
-  border-radius: 8px;
+  min-height: 140px;
+  padding: 18px 20px;
+  border: 2px solid #e0e0e0;
+  border-radius: 10px;
   font-size: 15px;
-  line-height: 1.6;
-  transition: all 0.3s ease;
-  background: #fafafa;
+  line-height: 1.7;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #ffffff;
   resize: vertical;
   font-family: inherit;
+  color: #333;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.woocommerce-additional-fields .form-row textarea::placeholder {
+  color: #999;
+  font-style: italic;
 }
 
 .woocommerce-additional-fields .form-row textarea:focus {
   outline: none;
   border-color: #006D77;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(0, 109, 119, 0.1);
+  box-shadow: 0 0 0 4px rgba(0, 109, 119, 0.08), 0 2px 8px rgba(0, 109, 119, 0.12);
+  transform: translateY(-1px);
 }
 
-.woocommerce-additional-fields .form-row label {
-  font-weight: 600;
-  color: #333;
-  margin-bottom: 10px;
-  display: block;
-  font-size: 15px;
+.woocommerce-additional-fields .form-row textarea:hover:not(:focus) {
+  border-color: #c0c0c0;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
 
-.woocommerce-additional-fields .form-row label::after {
-  content: ' (optional)';
+/* Optional label styling */
+.woocommerce-additional-fields .form-row .optional {
   font-weight: 400;
   color: #999;
   font-size: 13px;
+  margin-left: 8px;
+  font-style: italic;
 }
 
 /* Order Review Section - Enhanced */
