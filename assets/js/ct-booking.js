@@ -91,11 +91,15 @@
             });
             // Re-mark days when month changes
             picker.on('view', () => {
-              setTimeout(markAvailableDays, 100);
+              setTimeout(markAvailableDays, 200);
             });
             // Re-mark days when calendar is rendered
             picker.on('render', () => {
-              setTimeout(markAvailableDays, 100);
+              setTimeout(markAvailableDays, 200);
+            });
+            // Re-mark days when month is changed via navigation
+            picker.on('changeMonth', () => {
+              setTimeout(markAvailableDays, 200);
             });
           },
           plugins: []
@@ -201,6 +205,7 @@
     // Mark days with available slots in calendar
     function markAvailableDays() {
       if (!picker) return;
+      if (Object.keys(availableDays).length === 0) return; // No dates to mark
 
       // Wait a bit for calendar to render
       setTimeout(function() {
@@ -210,95 +215,76 @@
           return;
         }
 
+        console.log('ComoTour Booking: Marking available days', Object.keys(availableDays).length, 'dates');
+
         // Try multiple selectors for Litepicker - check all calendars
         for (let i = 0; i < picker.calendars.length; i++) {
           const calendar = picker.calendars[i];
           if (!calendar) continue;
           
+          // Get the month and year from the calendar
+          let month = null;
+          let year = null;
+          
+          // Try to get from Litepicker's internal state
+          try {
+            if (picker.options && picker.options.months && picker.options.months[i]) {
+              const monthDate = picker.options.months[i];
+              month = monthDate.getMonth();
+              year = monthDate.getFullYear();
+            }
+          } catch(e) {}
+          
+          // Fallback: Parse from calendar header
+          if (month === null || year === null) {
+            const monthEl = calendar.querySelector('.month-item-name');
+            const yearEl = calendar.querySelector('.month-item-year');
+            
+            if (monthEl && yearEl) {
+              const monthText = monthEl.textContent.trim();
+              year = parseInt(yearEl.textContent.trim());
+              
+              const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                                  'July', 'August', 'September', 'October', 'November', 'December'];
+              month = monthNames.indexOf(monthText);
+              
+              if (month < 0) {
+                // Try abbreviated names
+                const monthAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                                   'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                month = monthAbbr.indexOf(monthText);
+              }
+            }
+          }
+          
+          if (month === null || year === null || isNaN(year) || month < 0) {
+            console.warn('ComoTour Booking: Could not determine month/year for calendar', i);
+            continue;
+          }
+          
           // Find all day items
           const allDays = calendar.querySelectorAll('.day-item:not(.is-disabled)');
           
           allDays.forEach(function(dayEl) {
-            // Try to get date from Litepicker's data attributes
-            // Litepicker stores date as timestamp in data-time or similar
-            let dayTimestamp = dayEl.getAttribute('data-time') || 
-                              dayEl.getAttribute('data-timestamp') ||
-                              dayEl.getAttribute('data-date');
+            const dayNum = parseInt(dayEl.textContent.trim());
+            if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) return;
             
-            if (dayTimestamp) {
-              // Convert timestamp to date string
-              const dayDate = new Date(parseInt(dayTimestamp) * 1000);
-              const dateStr = dayDate.getFullYear() + '-' + 
-                            String(dayDate.getMonth() + 1).padStart(2, '0') + '-' + 
-                            String(dayDate.getDate()).padStart(2, '0');
-              
-              if (availableDays[dateStr]) {
-                dayEl.classList.add('ct-day-has-slots');
-              }
+            // Create date string for this day
+            const testDate = new Date(year, month, dayNum);
+            const dateStr = testDate.getFullYear() + '-' + 
+                          String(testDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                          String(testDate.getDate()).padStart(2, '0');
+            
+            // Check if this date has slots
+            if (availableDays[dateStr]) {
+              dayEl.classList.add('ct-day-has-slots');
             } else {
-              // Fallback: use text content and calendar month/year
-              const dayNum = parseInt(dayEl.textContent.trim());
-              if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) return;
-              
-              // Try multiple ways to get month and year
-              let month = null;
-              let year = null;
-              
-              // Method 1: Try to get from picker's current view
-              if (picker && picker.calendars && picker.calendars[i]) {
-                try {
-                  const currentDate = picker.calendars[i].dateInstance || picker.calendars[i].date;
-                  if (currentDate) {
-                    month = currentDate.getMonth();
-                    year = currentDate.getFullYear();
-                  }
-                } catch(e) {}
-              }
-              
-              // Method 2: Parse from calendar header text
-              if (month === null || year === null) {
-                const headerEl = calendar.querySelector('.month-item-year') || 
-                                calendar.querySelector('.month-item') ||
-                                calendar.querySelector('[class*="month"]');
-                
-                if (headerEl) {
-                  const headerText = headerEl.textContent.trim();
-                  // Try to match "December 2025" or "12 2025" format
-                  const match = headerText.match(/(\w+|\d+)\s+(\d{4})/);
-                  if (match) {
-                    const monthPart = match[1];
-                    year = parseInt(match[2]);
-                    
-                    // Try parsing as month name first
-                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
-                                        'July', 'August', 'September', 'October', 'November', 'December'];
-                    month = monthNames.indexOf(monthPart);
-                    
-                    // If not found, try as number
-                    if (month < 0) {
-                      month = parseInt(monthPart);
-                      if (!isNaN(month)) {
-                        month = month - 1; // Convert to 0-based
-                      }
-                    }
-                  }
-                }
-              }
-              
-              // If we have valid month and year, check the date
-              if (month !== null && year !== null && month >= 0 && month <= 11 && !isNaN(year)) {
-                const testDate = new Date(year, month, dayNum);
-                const dateStr = testDate.getFullYear() + '-' + 
-                              String(testDate.getMonth() + 1).padStart(2, '0') + '-' + 
-                              String(testDate.getDate()).padStart(2, '0');
-                
-                if (availableDays[dateStr]) {
-                  dayEl.classList.add('ct-day-has-slots');
-                }
-              }
+              dayEl.classList.remove('ct-day-has-slots');
             }
           });
         }
+        
+        console.log('ComoTour Booking: Finished marking available days');
       }, 600);
     }
 

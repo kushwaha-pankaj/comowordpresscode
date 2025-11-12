@@ -420,7 +420,7 @@
 .ct-slot-btn.ct-slot-selected {
   border-color: #006D77 !important;
   border-width: 2px !important;
-  background: white !important;
+  background: linear-gradient(135deg, rgba(0, 109, 119, 0.06) 0%, rgba(0, 109, 119, 0.02) 100%) !important;
   box-shadow: 0 0 0 2px #006D77,
               0 4px 16px rgba(0, 109, 119, 0.2) !important;
   position: relative;
