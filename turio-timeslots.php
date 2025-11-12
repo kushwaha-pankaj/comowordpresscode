@@ -95,85 +95,105 @@ final class CT_Turio_Timeslots {
 
     wp_nonce_field('ct_ts_save_meta', 'ct_ts_nonce');
 
-    echo '<div class="ct-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin-bottom:20px;">';
-    echo '<div><label><strong>Product Type</strong><br>';
-    echo '<select name="ct_mode" id="ct_mode" style="width:100%;padding:6px;margin-top:5px;">';
+    echo '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">';
+    echo '<h3 style="margin:0 0 20px 0;font-size:16px;font-weight:600;color:#23282d;border-bottom:2px solid #0073aa;padding-bottom:10px;">General Settings</h3>';
+    
+    echo '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">';
+    
+    echo '<div>';
+    echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Product Type</label>';
+    echo '<select name="ct_mode" id="ct_mode" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;background:#fff;transition:border-color 0.2s;">';
     echo '<option value="private" '.selected($mode,'private',false).'>Private (Tour)</option>';
     echo '<option value="shared"  '.selected($mode,'shared',false).'>Shared (Per-Seat)</option>';
-    echo '</select></label></div>';
-
-    echo '<div style="display:flex;gap:10px;align-items:flex-end;">';
-    echo '<div style="flex:1;"><label><strong>Date Range (From)</strong><br>';
-    echo '<input type="text" class="ct-date" name="ct_date_from" id="ct_date_from" value="'.esc_attr($date_from).'" placeholder="YYYY-MM-DD" style="width:100%;padding:6px;margin-top:5px;">';
-    echo '</label></div>';
-    echo '<div style="flex:1;"><label><strong>Date Range (To)</strong><br>';
-    echo '<input type="text" class="ct-date" name="ct_date_to" id="ct_date_to" value="'.esc_attr($date_to).'" placeholder="YYYY-MM-DD" style="width:100%;padding:6px;margin-top:5px;">';
-    echo '</label></div>';
+    echo '</select>';
     echo '</div>';
 
-    echo '<div><label><strong>Select Specific Date for Time Slots</strong><br>';
-    echo '<div style="display:flex;align-items:center;gap:8px;margin-top:5px;">';
-    echo '<input type="text" class="ct-date" name="ct_specific_date" id="ct_specific_date" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="flex:1;padding:6px;">';
-    echo '<button type="button" class="button" id="ct_clear_specific_date" style="white-space:nowrap;">Clear</button>';
+    echo '<div>';
+    echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Date Range</label>';
+    echo '<div style="display:flex;gap:10px;">';
+    echo '<div style="flex:1;"><input type="text" class="ct-date" name="ct_date_from" id="ct_date_from" value="'.esc_attr($date_from).'" placeholder="From" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div style="flex:1;"><input type="text" class="ct-date" name="ct_date_to" id="ct_date_to" value="'.esc_attr($date_to).'" placeholder="To" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
     echo '</div>';
-    echo '</label></div>';
-
-    echo '<div><label><strong>Bookings available (inventory)</strong><br>';
-    echo '<input type="number" min="0" name="ct_max_people" id="ct_max_people" value="'.esc_attr($max_people).'" placeholder="How many times can this tour be booked?" style="width:100%;padding:6px;margin-top:5px;">';
-    echo '<span class="description" style="display:block;margin-top:6px;font-size:12px;color:#666;line-height:1.4;">Private slots use this number as their capacity. Shared slots cannot exceed it.</span>';
-    echo '</label></div>';
-
-    echo '</div><hr class="ct-hr" style="margin:20px 0;"/>';
-
-    echo '<div id="ct_private_box" class="'.($mode==='shared'?'ct-hide':'').'" style="margin-bottom:20px;padding:15px;background:#f9f9f9;border-radius:4px;">';
-    echo '<h3 style="margin-top:0;margin-bottom:10px;font-size:15px;">Private – Time Slots & Pricing</h3>';
-    echo '<p class="description" style="margin-bottom:12px;font-size:13px;color:#666;line-height:1.5;">Tip: leave "Specific Date" empty to duplicate this slot across the selected date range. Capacity = how many people can fit. Max Bookings = how many times this slot can be booked.</p>';
-    echo '<div class="ct-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;">';
-    echo '<input type="text" id="ct_p_start" class="ct-time" placeholder="Start (07:00)" style="padding:8px;">';
-    echo '<input type="text" id="ct_p_end" class="ct-time" placeholder="End (09:00)" style="padding:8px;">';
-    echo '<input type="number" min="1" id="ct_p_capacity" placeholder="Capacity (people)" style="padding:8px;">';
-    echo '<input type="number" min="1" id="ct_p_max_bookings" placeholder="Max Bookings" style="padding:8px;">';
-    echo '<input type="number" step="0.01" id="ct_p_price" placeholder="Price €" style="padding:8px;">';
-    echo '<input type="number" step="0.01" id="ct_p_promo" placeholder="Promo € (optional)" style="padding:8px;">';
-    echo '<input type="number" step="1" id="ct_p_disc" placeholder="Discount % (optional)" style="padding:8px;">';
-    echo '</div>';
-    echo '<p style="margin:0;"><button class="button button-primary" id="ct-add-p-slot" style="padding:8px 16px;">+ Add Private Time Slot</button></p>';
     echo '</div>';
 
-    echo '<div id="ct_shared_box" class="'.($mode==='private'?'ct-hide':'').'" style="margin-bottom:20px;padding:15px;background:#f9f9f9;border-radius:4px;">';
-    echo '<h3 style="margin-top:0;margin-bottom:10px;font-size:15px;">Shared – Time Slots & Pricing</h3>';
-    echo '<p class="description" style="margin-bottom:12px;font-size:13px;color:#666;line-height:1.5;">Inventory above limits how many shared slots you can sell overall. Use capacity below for seats available in this slot.</p>';
-    echo '<div class="ct-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;">';
-    echo '<input type="text" id="ct_s_start" class="ct-time" placeholder="Start (10:00)" style="padding:8px;">';
-    echo '<input type="text" id="ct_s_end" class="ct-time" placeholder="End (11:00)" style="padding:8px;">';
-    echo '<input type="number" min="1" id="ct_s_capacity" placeholder="Capacity" style="padding:8px;">';
-    echo '<input type="number" step="0.01" id="ct_s_price" placeholder="Price per person €" style="padding:8px;">';
+    echo '<div>';
+    echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Specific Date (Optional)</label>';
+    echo '<div style="display:flex;gap:8px;">';
+    echo '<input type="text" class="ct-date" name="ct_specific_date" id="ct_specific_date" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="flex:1;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;">';
+    echo '<button type="button" class="button" id="ct_clear_specific_date" style="white-space:nowrap;padding:10px 16px;">Clear</button>';
     echo '</div>';
-    echo '<p style="margin:0;"><button class="button" id="ct-add-s-slot" style="padding:8px 16px;">+ Add Shared Time Slot</button></p>';
     echo '</div>';
 
-    echo '<hr class="ct-hr" style="margin:20px 0;"/>';
-    echo '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;padding:12px;background:#f9f9f9;border-radius:4px;">';
-    echo '<h3 style="margin:0;font-size:16px;">Time Slots</h3>';
-    echo '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
-    echo '<label style="margin:0;font-weight:600;font-size:13px;">Filter by date:</label>';
-    echo '<input type="text" class="ct-date" id="ct_table_date_filter" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="width:150px;">';
-    echo '<button type="button" class="button" id="ct_clear_table_filter" style="white-space:nowrap;">Clear Filter</button>';
+    echo '<div>';
+    echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Bookings Available (Inventory)</label>';
+    echo '<input type="number" min="0" name="ct_max_people" id="ct_max_people" value="'.esc_attr($max_people).'" placeholder="e.g., 20" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;">';
+    echo '<span class="description" style="display:block;margin-top:6px;font-size:12px;color:#646970;line-height:1.5;">Maximum number of bookings allowed for this tour</span>';
     echo '</div>';
+
+    echo '</div></div>';
+
+    echo '<div id="ct_private_box" class="'.($mode==='shared'?'ct-hide':'').'" style="margin-bottom:24px;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">';
+    echo '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #0073aa;">';
+    echo '<h3 style="margin:0;font-size:16px;font-weight:600;color:#23282d;">Private Tour – Time Slots & Pricing</h3>';
+    echo '<span style="background:#0073aa;color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;">Private</span>';
     echo '</div>';
-    echo '<div id="ct_bulk_actions" style="margin-bottom:12px;padding:10px;background:#fff3cd;border-left:4px solid #ffc107;display:none;border-radius:4px;">';
+    echo '<div style="background:#f0f6fc;border-left:4px solid #0073aa;padding:12px 16px;margin-bottom:20px;border-radius:4px;">';
+    echo '<p style="margin:0;font-size:13px;color:#1d2327;line-height:1.6;"><strong>💡 Tip:</strong> Leave "Specific Date" empty to duplicate this slot across the selected date range. <strong>Capacity</strong> = how many people can fit. <strong>Max Bookings</strong> = how many times this slot can be booked.</p>';
+    echo '</div>';
+    echo '<div class="ct-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;">';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Start Time</label><input type="text" id="ct_p_start" class="ct-time" placeholder="07:00" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">End Time</label><input type="text" id="ct_p_end" class="ct-time" placeholder="09:00" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Capacity (People)</label><input type="number" min="1" id="ct_p_capacity" placeholder="10" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Max Bookings</label><input type="number" min="1" id="ct_p_max_bookings" placeholder="20" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Price (€)</label><input type="number" step="0.01" id="ct_p_price" placeholder="100.00" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Promo Price (€)</label><input type="number" step="0.01" id="ct_p_promo" placeholder="Optional" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Discount (%)</label><input type="number" step="1" id="ct_p_disc" placeholder="Optional" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '</div>';
+    echo '<button class="button button-primary" id="ct-add-p-slot" style="padding:12px 24px;font-size:14px;font-weight:600;border-radius:4px;box-shadow:0 1px 2px rgba(0,0,0,0.1);">+ Add Private Time Slot</button>';
+    echo '</div>';
+
+    echo '<div id="ct_shared_box" class="'.($mode==='private'?'ct-hide':'').'" style="margin-bottom:24px;background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">';
+    echo '<div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;padding-bottom:12px;border-bottom:2px solid #00a32a;">';
+    echo '<h3 style="margin:0;font-size:16px;font-weight:600;color:#23282d;">Shared Tour – Time Slots & Pricing</h3>';
+    echo '<span style="background:#00a32a;color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;">Shared</span>';
+    echo '</div>';
+    echo '<div style="background:#f0f6fc;border-left:4px solid #00a32a;padding:12px 16px;margin-bottom:20px;border-radius:4px;">';
+    echo '<p style="margin:0;font-size:13px;color:#1d2327;line-height:1.6;">Inventory above limits how many shared slots you can sell overall. Use capacity below for seats available in this slot.</p>';
+    echo '</div>';
+    echo '<div class="ct-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;">';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Start Time</label><input type="text" id="ct_s_start" class="ct-time" placeholder="10:00" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">End Time</label><input type="text" id="ct_s_end" class="ct-time" placeholder="11:00" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Capacity</label><input type="number" min="1" id="ct_s_capacity" placeholder="20" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Price per Person (€)</label><input type="number" step="0.01" id="ct_s_price" placeholder="50.00" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '</div>';
+    echo '<button class="button" id="ct-add-s-slot" style="padding:12px 24px;font-size:14px;font-weight:600;border-radius:4px;background:#00a32a;border-color:#00a32a;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.1);">+ Add Shared Time Slot</button>';
+    echo '</div>';
+
+    echo '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">';
+    echo '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:16px;padding-bottom:16px;border-bottom:2px solid #0073aa;">';
+    echo '<h3 style="margin:0;font-size:16px;font-weight:600;color:#23282d;">Time Slots Management</h3>';
     echo '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">';
-    echo '<button type="button" class="button" id="ct_select_all_slots">Select All</button>';
-    echo '<button type="button" class="button" id="ct_deselect_all_slots">Deselect All</button>';
-    echo '<button type="button" class="button button-link-delete" id="ct_bulk_delete_slots" style="color:#b32d2e;font-weight:600;">Delete Selected</button>';
-    echo '<span id="ct_selected_count" style="margin-left:10px;font-weight:600;color:#333;"></span>';
+    echo '<label style="margin:0;font-weight:600;font-size:13px;color:#646970;">Filter by date:</label>';
+    echo '<input type="text" class="ct-date" id="ct_table_date_filter" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="width:150px;padding:8px;border:1px solid #8c8f94;border-radius:4px;font-size:13px;">';
+    echo '<button type="button" class="button" id="ct_clear_table_filter" style="white-space:nowrap;padding:8px 16px;">Clear Filter</button>';
     echo '</div>';
     echo '</div>';
-    echo '<table class="widefat fixed striped" id="ct_slots_table" style="margin-top:0;">';
-    echo '<thead><tr id="ct_table_header"></tr></thead>';
-    echo '<tbody><tr><td colspan="11" id="ct_loading_msg" style="text-align:center;padding:20px;">Loading time slots…</td></tr></tbody>';
+    echo '<div id="ct_bulk_actions" style="margin-bottom:16px;padding:14px 16px;background:linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);border:1px solid #ffc107;border-left:4px solid #ff9800;display:none;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,0.05);">';
+    echo '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+    echo '<button type="button" class="button" id="ct_select_all_slots" style="padding:8px 16px;font-weight:600;">Select All</button>';
+    echo '<button type="button" class="button" id="ct_deselect_all_slots" style="padding:8px 16px;font-weight:600;">Deselect All</button>';
+    echo '<button type="button" class="button button-link-delete" id="ct_bulk_delete_slots" style="color:#b32d2e;font-weight:600;padding:8px 16px;background:#fff;border:1px solid #b32d2e;border-radius:4px;">🗑️ Delete Selected</button>';
+    echo '<span id="ct_selected_count" style="margin-left:auto;font-weight:600;color:#1d2327;font-size:14px;padding:6px 12px;background:#fff;border-radius:4px;"></span>';
+    echo '</div>';
+    echo '</div>';
+    echo '<div style="overflow-x:auto;border:1px solid #ddd;border-radius:6px;">';
+    echo '<table class="widefat fixed striped" id="ct_slots_table" style="margin:0;border-collapse:collapse;">';
+    echo '<thead><tr id="ct_table_header" style="background:#f6f7f7;"></tr></thead>';
+    echo '<tbody><tr><td colspan="11" id="ct_loading_msg" style="text-align:center;padding:40px;color:#646970;font-size:14px;">Loading time slots…</td></tr></tbody>';
     echo '</table>';
-    echo '<div id="ct_slots_pagination" style="margin-top:15px;display:none;"></div>';
+    echo '</div>';
+    echo '<div id="ct_slots_pagination" style="margin-top:20px;display:none;"></div>';
+    echo '</div>';
   }
 
   public function save_meta($post_id) {

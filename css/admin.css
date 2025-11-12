@@ -1,25 +1,164 @@
-.ct-hide { display:none !important; }
+/* ComoTour Timeslots Admin Styles */
 
-.ct-grid {
-  display: grid;
-  grid-template-columns: repeat(2, minmax(240px, 1fr));
-  gap: 16px;
-  align-items: end;
-}
-
-.ct-row {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(120px, 1fr));
-  gap: 12px;
-  margin-bottom: 12px;
+.ct-hide {
+  display: none !important;
 }
 
 .ct-hr {
-  border: 0;
+  border: none;
   border-top: 1px solid #ddd;
-  margin: 16px 0;
+  margin: 20px 0;
 }
 
-#ct_slots_table th, #ct_slots_table td {
+/* Form Input Focus States */
+#ct_mode:focus,
+.ct-date:focus,
+.ct-time:focus,
+input[type="number"]:focus {
+  border-color: #0073aa !important;
+  box-shadow: 0 0 0 1px #0073aa !important;
+  outline: none;
+}
+
+/* Table Styling */
+#ct_slots_table {
+  font-size: 13px;
+}
+
+#ct_slots_table thead th {
+  padding: 12px 10px;
+  font-weight: 600;
+  color: #23282d;
+  text-align: left;
+  border-bottom: 2px solid #0073aa;
+  background: #f6f7f7;
+}
+
+#ct_slots_table tbody td {
+  padding: 12px 10px;
   vertical-align: middle;
+  border-bottom: 1px solid #ddd;
+}
+
+#ct_slots_table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+#ct_slots_table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+/* Editable Capacity Input */
+.ct-capacity-input {
+  border: 1px solid #8c8f94;
+  border-radius: 3px;
+  transition: all 0.2s;
+}
+
+.ct-capacity-input:focus {
+  border-color: #0073aa;
+  box-shadow: 0 0 0 1px #0073aa;
+  outline: none;
+}
+
+.ct-capacity-input:disabled {
+  background-color: #f0f0f1;
+  cursor: not-allowed;
+}
+
+/* Button Styling */
+#ct-add-p-slot,
+#ct-add-s-slot {
+  transition: all 0.2s;
+}
+
+#ct-add-p-slot:hover {
+  background: #005a87 !important;
+  border-color: #005a87 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+}
+
+#ct-add-s-slot:hover {
+  background: #007a1f !important;
+  border-color: #007a1f !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+}
+
+/* Pagination Styling */
+#ct_slots_pagination {
+  padding: 16px;
+  background: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+#ct_slots_pagination button {
+  padding: 8px 16px;
+  font-weight: 600;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+#ct_slots_pagination button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+#ct_slots_pagination #ct-load-more {
+  background: #0073aa;
+  border-color: #0073aa;
+  color: #fff;
+}
+
+#ct_slots_pagination #ct-load-more:hover {
+  background: #005a87;
+  border-color: #005a87;
+}
+
+/* Delete Button */
+.ct-del {
+  color: #b32d2e !important;
+  transition: all 0.2s;
+}
+
+.ct-del:hover {
+  color: #8a2424 !important;
+  text-decoration: underline;
+}
+
+/* Responsive Design */
+@media (max-width: 782px) {
+  .ct-grid {
+    grid-template-columns: 1fr !important;
+  }
+  
+  #ct_slots_table {
+    font-size: 12px;
+  }
+  
+  #ct_slots_table thead th,
+  #ct_slots_table tbody td {
+    padding: 8px 6px;
+  }
+}
+
+/* Loading State */
+#ct_loading_msg {
+  font-style: italic;
+  color: #646970;
+}
+
+/* Empty State */
+#ct_slots_table tbody td[colspan] {
+  text-align: center;
+  padding: 40px 20px;
+  color: #646970;
+  font-style: italic;
 }
