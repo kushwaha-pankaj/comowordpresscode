@@ -646,12 +646,31 @@ jQuery(function($){
 
   $('#ct_clear_table_filter').on('click', function(e){
     e.preventDefault();
-    $('#ct_table_date_filter').val('');
-    var fp = $('#ct_table_date_filter')[0]._flatpickr;
-    if (fp) {
-      fp.clear();
+    var $filterInput = $('#ct_table_date_filter');
+    var inputEl = $filterInput[0];
+    
+    // Clear Flatpickr instance if it exists
+    if (inputEl) {
+      // Flatpickr stores instance on _flatpickr property
+      var fp = inputEl._flatpickr;
+      
+      if (fp && typeof fp.clear === 'function') {
+        // Clear using Flatpickr's clear method (this also clears altInput)
+        fp.clear();
+      } else {
+        // Fallback: manually clear the input
+        $filterInput.val('');
+        // Also clear altInput if it exists (Flatpickr creates this when altInput: true)
+        var altInput = $filterInput.siblings('input.flatpickr-input');
+        if (altInput.length) {
+          altInput.val('');
+        }
+      }
     }
+    
+    // Reset pagination and reload all slots
     currentPage = 1;
+    currentFilterDate = '';
     loadAllSlots(1, false, false);
   });
 

@@ -122,6 +122,26 @@ input[type="number"]:focus {
   box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
 }
 
+/* Filter Controls Styling */
+#ct_load_all_slots:hover {
+  background: #005a87 !important;
+  border-color: #005a87 !important;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.15) !important;
+}
+
+#ct_clear_table_filter:hover {
+  background: #f6f7f7 !important;
+  border-color: #0073aa !important;
+  color: #0073aa !important;
+}
+
+#ct_table_date_filter:focus {
+  border-color: #0073aa !important;
+  box-shadow: 0 0 0 1px #0073aa !important;
+  outline: none;
+}
+
 /* Pagination Styling */
 #ct_slots_pagination {
   padding: 20px;

@@ -168,11 +168,13 @@ final class CT_Turio_Timeslots {
     echo '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">';
     echo '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:16px;padding-bottom:16px;border-bottom:2px solid #0073aa;">';
     echo '<h3 style="margin:0;font-size:16px;font-weight:600;color:#23282d;">Time Slots Management</h3>';
-    echo '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">';
-    echo '<button type="button" class="button button-primary" id="ct_load_all_slots" style="white-space:nowrap;padding:8px 16px;font-weight:600;background:#0073aa;border-color:#0073aa;color:#fff;height:32px;box-sizing:border-box;display:inline-flex;align-items:center;">📋 Load All</button>';
-    echo '<label style="margin:0;font-weight:600;font-size:13px;color:#646970;">Filter by date:</label>';
-    echo '<input type="text" class="ct-date" id="ct_table_date_filter" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="width:150px;padding:8px;border:1px solid #8c8f94;border-radius:4px;font-size:13px;height:32px;box-sizing:border-box;">';
-    echo '<button type="button" class="button" id="ct_clear_table_filter" style="white-space:nowrap;padding:8px 16px;height:32px;box-sizing:border-box;">Clear Filter</button>';
+    echo '<div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;">';
+    echo '<button type="button" class="button button-primary" id="ct_load_all_slots" style="white-space:nowrap;padding:8px 18px;font-weight:600;background:#0073aa;border-color:#0073aa;color:#fff;height:36px;box-sizing:border-box;display:inline-flex;align-items:center;justify-content:center;border-radius:4px;transition:all 0.2s;box-shadow:0 1px 2px rgba(0,0,0,0.1);">📋 Load All</button>';
+    echo '<div style="display:flex;align-items:center;gap:8px;padding:0 12px;border-left:1px solid #ddd;border-right:1px solid #ddd;">';
+    echo '<label style="margin:0;font-weight:600;font-size:13px;color:#646970;white-space:nowrap;">Filter by date:</label>';
+    echo '<input type="text" class="ct-date" id="ct_table_date_filter" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="width:140px;padding:8px 10px;border:1px solid #8c8f94;border-radius:4px;font-size:13px;height:36px;box-sizing:border-box;transition:border-color 0.2s;">';
+    echo '</div>';
+    echo '<button type="button" class="button" id="ct_clear_table_filter" style="white-space:nowrap;padding:8px 16px;height:36px;box-sizing:border-box;border-radius:4px;transition:all 0.2s;background:#fff;border:1px solid #8c8f94;color:#23282d;">Clear Filter</button>';
     echo '</div>';
     echo '</div>';
     echo '<div id="ct_bulk_actions" style="margin-bottom:16px;padding:14px 16px;background:linear-gradient(135deg, #fff3cd 0%, #ffe69c 100%);border:1px solid #ffc107;border-left:4px solid #ff9800;display:none;border-radius:6px;box-shadow:0 2px 4px rgba(0,0,0,0.05);">';
