@@ -174,9 +174,38 @@ jQuery(function($){
     var isShared = currentMode()==='shared';
     $('#ct_private_box').toggleClass('ct-hide', isShared);
     $('#ct_shared_box').toggleClass('ct-hide', !isShared);
+    // Update table headers when mode changes
+    updateTableHeaders();
   }
   $('#ct_mode').on('change', toggleMode);
   toggleMode();
+
+  function updateTableHeaders(){
+    var mode = currentMode();
+    var isShared = mode === 'shared';
+    var headers = [
+      '<th style="width:30px;"><input type="checkbox" id="ct_select_all_checkbox" title="Select all"></th>',
+      '<th>Date</th>',
+      '<th>Type</th>',
+      '<th>Start</th>',
+      '<th>End</th>',
+      '<th>Duration</th>'
+    ];
+    
+    if (isShared) {
+      headers.push('<th>Seats Available</th>');
+      headers.push('<th>Max Bookings</th>');
+    } else {
+      headers.push('<th>Capacity</th>');
+      headers.push('<th>Max Bookings</th>');
+    }
+    
+    headers.push('<th>Price (€)</th>');
+    headers.push('<th>Booked</th>');
+    headers.push('<th>Actions</th>');
+    
+    $('#ct_table_header').html(headers.join(''));
+  }
 
   function ucfirst(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 
@@ -190,29 +219,66 @@ jQuery(function($){
     
     if (!slots || !slots.length){
       if (!append) {
-        $tb.append('<tr><td colspan="10">No time slots found.</td></tr>');
+        var mode = currentMode();
+        var colCount = mode === 'shared' ? 11 : 11;
+        $tb.append('<tr><td colspan="'+colCount+'" style="text-align:center;padding:20px;color:#666;">No time slots found.</td></tr>');
       }
+      updateBulkActions();
       return;
     }
     
+    var mode = currentMode();
+    var isShared = mode === 'shared';
+    
     slots.forEach(function(s){
       var row = $('<tr data-slot="'+s.id+'">');
+      
+      // Checkbox for bulk selection
+      var checkbox = $('<input type="checkbox" class="ct-slot-checkbox" data-slot-id="'+s.id+'">');
+      row.append($('<td>').append(checkbox));
+      
       row.append('<td>'+s.date+'</td>');
       row.append('<td>'+ucfirst(s.mode||'private')+'</td>');
       row.append('<td>'+s.time+'</td>');
       row.append('<td>'+s.end+'</td>');
       row.append('<td>'+s.duration+'m</td>');
-      row.append('<td>'+s.capacity+'</td>');
+      
+      if (isShared) {
+        // For shared: show seats available (available / total)
+        var available = Math.max(0, s.capacity - (s.booked||0));
+        row.append('<td><strong>'+available+'</strong> / '+s.capacity+'</td>');
+      } else {
+        // For private: show capacity
+        row.append('<td>'+s.capacity+'</td>');
+      }
+      
       // Editable Max Bookings column
       var capacityCell = $('<td class="ct-capacity-edit">');
-      var capacityInput = $('<input type="number" min="1" class="ct-capacity-input" value="'+s.capacity+'" data-slot-id="'+s.id+'" style="width:70px;">');
+      var capacityInput = $('<input type="number" min="1" class="ct-capacity-input" value="'+s.capacity+'" data-slot-id="'+s.id+'" style="width:70px;padding:4px;">');
       capacityCell.append(capacityInput);
       row.append(capacityCell);
+      
       row.append('<td>'+Number(s.price).toFixed(2)+'</td>');
       row.append('<td>'+(s.booked||0)+'</td>');
       row.append('<td><button class="button button-link-delete ct-del" data-id="'+s.id+'">Delete</button></td>');
       $tb.append(row);
     });
+    
+    updateBulkActions();
+  }
+
+  function updateBulkActions(){
+    var checked = $('.ct-slot-checkbox:checked').length;
+    var $bulkActions = $('#ct_bulk_actions');
+    var $selectedCount = $('#ct_selected_count');
+    
+    if (checked > 0) {
+      $bulkActions.show();
+      $selectedCount.text(checked + ' slot' + (checked === 1 ? '' : 's') + ' selected');
+    } else {
+      $bulkActions.hide();
+      $selectedCount.text('');
+    }
   }
 
   function renderPagination(page, totalPages){
@@ -264,6 +330,10 @@ jQuery(function($){
       totalPages = res.data.total_pages;
       currentFilterDate = isoFilterDate;
       
+      // Update table headers before rendering (in case mode changed)
+      if (!append) {
+        updateTableHeaders();
+      }
       renderRows(res.data.slots || [], append);
       renderPagination(currentPage, totalPages);
     }, 'json').fail(function(xhr, status, err){
@@ -615,8 +685,17 @@ jQuery(function($){
       $input.prop('disabled', false);
       if (res && res.success) {
         $input.attr('data-original-value', newCapacity);
-        // Update the capacity column too
-        $input.closest('tr').find('td:eq(5)').text(newCapacity);
+        // Update the capacity column too (index 6: after checkbox, date, type, start, end, duration, capacity)
+        var mode = currentMode();
+        var isShared = mode === 'shared';
+        var $capacityCell = $input.closest('tr').find('td:eq(6)');
+        if (isShared) {
+          var booked = parseInt($input.closest('tr').find('td:eq(9)').text() || '0', 10);
+          var available = Math.max(0, newCapacity - booked);
+          $capacityCell.html('<strong>'+available+'</strong> / '+newCapacity);
+        } else {
+          $capacityCell.text(newCapacity);
+        }
         toast('Capacity updated successfully.');
       } else {
         $input.val(oldCapacity);
@@ -634,6 +713,76 @@ jQuery(function($){
     if (e.which === 13) { // Enter key
       $(this).blur();
     }
+  });
+
+  // Bulk selection handlers
+  $(document).on('change', '#ct_select_all_checkbox', function(){
+    var checked = $(this).is(':checked');
+    $('.ct-slot-checkbox').prop('checked', checked);
+    updateBulkActions();
+  });
+
+  $(document).on('change', '.ct-slot-checkbox', function(){
+    updateBulkActions();
+    // Update select all checkbox state
+    var total = $('.ct-slot-checkbox').length;
+    var checked = $('.ct-slot-checkbox:checked').length;
+    $('#ct_select_all_checkbox').prop('checked', total > 0 && checked === total);
+  });
+
+  $('#ct_select_all_slots').on('click', function(e){
+    e.preventDefault();
+    $('.ct-slot-checkbox').prop('checked', true);
+    $('#ct_select_all_checkbox').prop('checked', true);
+    updateBulkActions();
+  });
+
+  $('#ct_deselect_all_slots').on('click', function(e){
+    e.preventDefault();
+    $('.ct-slot-checkbox').prop('checked', false);
+    $('#ct_select_all_checkbox').prop('checked', false);
+    updateBulkActions();
+  });
+
+  $('#ct_bulk_delete_slots').on('click', function(e){
+    e.preventDefault();
+    var selected = [];
+    $('.ct-slot-checkbox:checked').each(function(){
+      var slotId = parseInt($(this).data('slot-id'), 10);
+      if (slotId) {
+        selected.push(slotId);
+      }
+    });
+    
+    if (selected.length === 0) {
+      toast('Please select at least one slot to delete.');
+      return;
+    }
+    
+    if (!window.confirm('Are you sure you want to delete ' + selected.length + ' selected slot' + (selected.length === 1 ? '' : 's') + '?')) {
+      return;
+    }
+    
+    $(this).prop('disabled', true).text('Deleting...');
+    
+    $.post(CT_TS_ADMIN.ajax, {
+      action: 'ct_admin_bulk_delete_slots',
+      nonce: CT_TS_ADMIN.nonce,
+      post_id: POST_ID,
+      slot_ids: selected
+    }, function(res){
+      $('#ct_bulk_delete_slots').prop('disabled', false).text('Delete Selected');
+      if (res && res.success) {
+        toast(res.data.message || 'Slots deleted successfully.');
+        loadAllSlots(currentPage, false);
+      } else {
+        var msg = (res && res.data && res.data.msg) ? res.data.msg : 'Error deleting slots.';
+        toast(msg);
+      }
+    }, 'json').fail(function(){
+      $('#ct_bulk_delete_slots').prop('disabled', false).text('Delete Selected');
+      toast('Error deleting slots. Please try again.');
+    });
   });
 
   $('#ct-add-p-slot').on('click', function(e){

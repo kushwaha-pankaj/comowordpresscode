@@ -25,11 +25,13 @@ final class CT_Turio_Timeslots {
     register_activation_hook(__FILE__, [$this, 'activate']);
     add_action('add_meta_boxes', [$this, 'add_metabox_generic'], 10, 2);
     add_action('save_post', [$this, 'save_meta'], 10, 1);
+    add_action('before_delete_post', [$this, 'delete_tour_slots'], 10, 1);
     add_action('admin_enqueue_scripts', [$this, 'admin_assets']);
     add_action('wp_ajax_ct_admin_get_slots_by_date', [$this, 'ajax_admin_get_slots_by_date']);
     add_action('wp_ajax_ct_admin_get_all_slots', [$this, 'ajax_admin_get_all_slots']);
     add_action('wp_ajax_ct_admin_add_slot', [$this, 'ajax_admin_add_slot']);
     add_action('wp_ajax_ct_admin_delete_slot', [$this, 'ajax_admin_delete_slot']);
+    add_action('wp_ajax_ct_admin_bulk_delete_slots', [$this, 'ajax_admin_bulk_delete_slots']);
     add_action('wp_ajax_ct_admin_update_slot_capacity', [$this, 'ajax_admin_update_slot_capacity']);
   }
 
@@ -88,72 +90,83 @@ final class CT_Turio_Timeslots {
 
     wp_nonce_field('ct_ts_save_meta', 'ct_ts_nonce');
 
-    echo '<div class="ct-grid">';
-    echo '<p><label><strong>Product Type</strong><br>';
-    echo '<select name="ct_mode" id="ct_mode">';
+    echo '<div class="ct-grid" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:15px;margin-bottom:20px;">';
+    echo '<div><label><strong>Product Type</strong><br>';
+    echo '<select name="ct_mode" id="ct_mode" style="width:100%;padding:6px;margin-top:5px;">';
     echo '<option value="private" '.selected($mode,'private',false).'>Private (Tour)</option>';
     echo '<option value="shared"  '.selected($mode,'shared',false).'>Shared (Per-Seat)</option>';
-    echo '</select></label></p>';
+    echo '</select></label></div>';
 
-    echo '<p><label><strong>Date Range (From – To)</strong></label><br>';
-    echo '<input type="text" class="ct-date" name="ct_date_from" id="ct_date_from" value="'.esc_attr($date_from).'" placeholder="YYYY-MM-DD"> ';
-    echo '<input type="text" class="ct-date" name="ct_date_to" id="ct_date_to" value="'.esc_attr($date_to).'" placeholder="YYYY-MM-DD">';
-    echo '</p>';
+    echo '<div><label><strong>Date Range (From)</strong><br>';
+    echo '<input type="text" class="ct-date" name="ct_date_from" id="ct_date_from" value="'.esc_attr($date_from).'" placeholder="YYYY-MM-DD" style="width:100%;padding:6px;margin-top:5px;">';
+    echo '</label></div>';
 
-    echo '<p><label><strong>Select Specific Date for Time Slots</strong></label><br>';
-    echo '<div style="display:flex;align-items:center;gap:8px;">';
-    echo '<input type="text" class="ct-date" name="ct_specific_date" id="ct_specific_date" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="flex:1;">';
+    echo '<div><label><strong>Date Range (To)</strong><br>';
+    echo '<input type="text" class="ct-date" name="ct_date_to" id="ct_date_to" value="'.esc_attr($date_to).'" placeholder="YYYY-MM-DD" style="width:100%;padding:6px;margin-top:5px;">';
+    echo '</label></div>';
+
+    echo '<div><label><strong>Select Specific Date for Time Slots</strong><br>';
+    echo '<div style="display:flex;align-items:center;gap:8px;margin-top:5px;">';
+    echo '<input type="text" class="ct-date" name="ct_specific_date" id="ct_specific_date" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="flex:1;padding:6px;">';
     echo '<button type="button" class="button" id="ct_clear_specific_date" style="white-space:nowrap;">Clear</button>';
     echo '</div>';
-    echo '</p>';
+    echo '</label></div>';
 
-    echo '<p><label><strong>Bookings available (inventory)</strong><br>';
-    echo '<input type="number" min="0" name="ct_max_people" id="ct_max_people" value="'.esc_attr($max_people).'" placeholder="How many times can this tour be booked?">';
-    echo '<span class="description" style="display:block;margin-top:4px;max-width:360px;">Private slots use this number as their capacity. Shared slots cannot exceed it.</span>';
-    echo '</label></p>';
+    echo '<div><label><strong>Bookings available (inventory)</strong><br>';
+    echo '<input type="number" min="0" name="ct_max_people" id="ct_max_people" value="'.esc_attr($max_people).'" placeholder="How many times can this tour be booked?" style="width:100%;padding:6px;margin-top:5px;">';
+    echo '<span class="description" style="display:block;margin-top:6px;font-size:12px;color:#666;line-height:1.4;">Private slots use this number as their capacity. Shared slots cannot exceed it.</span>';
+    echo '</label></div>';
 
-    echo '</div><hr class="ct-hr"/>';
+    echo '</div><hr class="ct-hr" style="margin:20px 0;"/>';
 
-    echo '<div id="ct_private_box" class="'.($mode==='shared'?'ct-hide':'').'">';
-    echo '<h3>Private – Time Slots & Pricing</h3>';
-    echo '<p class="description" style="max-width:360px;">Tip: leave "Specific Date" empty to duplicate this slot across the selected date range. Capacity indicates how many bookings are allowed for this slot.</p>';
-    echo '<div class="ct-row">';
-    echo '<input type="text" id="ct_p_start" class="ct-time" placeholder="Start (07:00)">';
-    echo '<input type="text" id="ct_p_end" class="ct-time" placeholder="End (09:00)">';
-    echo '<input type="number" min="1" id="ct_p_capacity" placeholder="Capacity (bookings)">';
-    echo '<input type="number" step="0.01" id="ct_p_price" placeholder="Price €">';
-    echo '<input type="number" step="0.01" id="ct_p_promo" placeholder="Promo € (optional)">';
-    echo '<input type="number" step="1" id="ct_p_disc" placeholder="Discount % (optional)">';
+    echo '<div id="ct_private_box" class="'.($mode==='shared'?'ct-hide':'').'" style="margin-bottom:20px;padding:15px;background:#f9f9f9;border-radius:4px;">';
+    echo '<h3 style="margin-top:0;margin-bottom:10px;font-size:15px;">Private – Time Slots & Pricing</h3>';
+    echo '<p class="description" style="margin-bottom:12px;font-size:13px;color:#666;line-height:1.5;">Tip: leave "Specific Date" empty to duplicate this slot across the selected date range. Capacity indicates how many bookings are allowed for this slot.</p>';
+    echo '<div class="ct-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;">';
+    echo '<input type="text" id="ct_p_start" class="ct-time" placeholder="Start (07:00)" style="padding:8px;">';
+    echo '<input type="text" id="ct_p_end" class="ct-time" placeholder="End (09:00)" style="padding:8px;">';
+    echo '<input type="number" min="1" id="ct_p_capacity" placeholder="Capacity (bookings)" style="padding:8px;">';
+    echo '<input type="number" step="0.01" id="ct_p_price" placeholder="Price €" style="padding:8px;">';
+    echo '<input type="number" step="0.01" id="ct_p_promo" placeholder="Promo € (optional)" style="padding:8px;">';
+    echo '<input type="number" step="1" id="ct_p_disc" placeholder="Discount % (optional)" style="padding:8px;">';
     echo '</div>';
-    echo '<p><button class="button button-primary" id="ct-add-p-slot">+ Add Private Time Slot</button></p>';
-    echo '</div>';
-
-    echo '<div id="ct_shared_box" class="'.($mode==='private'?'ct-hide':'').'">';
-    echo '<h3>Shared – Time Slots & Pricing</h3>';
-    echo '<p class="description" style="max-width:360px;">Inventory above limits how many shared slots you can sell overall. Use capacity below for seats available in this slot.</p>';
-    echo '<div class="ct-row">';
-    echo '<input type="text" id="ct_s_start" class="ct-time" placeholder="Start (10:00)">';
-    echo '<input type="text" id="ct_s_end" class="ct-time" placeholder="End (11:00)">';
-    echo '<input type="number" min="1" id="ct_s_capacity" placeholder="Capacity">';
-    echo '<input type="number" step="0.01" id="ct_s_price" placeholder="Price per person €">';
-    echo '</div>';
-    echo '<p><button class="button" id="ct-add-s-slot">+ Add Shared Time Slot</button></p>';
+    echo '<p style="margin:0;"><button class="button button-primary" id="ct-add-p-slot" style="padding:8px 16px;">+ Add Private Time Slot</button></p>';
     echo '</div>';
 
-    echo '<hr class="ct-hr"/>';
-    echo '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
-    echo '<h3 style="margin:0;">Time Slots</h3>';
-    echo '<div style="display:flex;align-items:center;gap:8px;">';
-    echo '<label style="margin:0;font-weight:600;">Filter by date:</label>';
+    echo '<div id="ct_shared_box" class="'.($mode==='private'?'ct-hide':'').'" style="margin-bottom:20px;padding:15px;background:#f9f9f9;border-radius:4px;">';
+    echo '<h3 style="margin-top:0;margin-bottom:10px;font-size:15px;">Shared – Time Slots & Pricing</h3>';
+    echo '<p class="description" style="margin-bottom:12px;font-size:13px;color:#666;line-height:1.5;">Inventory above limits how many shared slots you can sell overall. Use capacity below for seats available in this slot.</p>';
+    echo '<div class="ct-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-bottom:12px;">';
+    echo '<input type="text" id="ct_s_start" class="ct-time" placeholder="Start (10:00)" style="padding:8px;">';
+    echo '<input type="text" id="ct_s_end" class="ct-time" placeholder="End (11:00)" style="padding:8px;">';
+    echo '<input type="number" min="1" id="ct_s_capacity" placeholder="Capacity" style="padding:8px;">';
+    echo '<input type="number" step="0.01" id="ct_s_price" placeholder="Price per person €" style="padding:8px;">';
+    echo '</div>';
+    echo '<p style="margin:0;"><button class="button" id="ct-add-s-slot" style="padding:8px 16px;">+ Add Shared Time Slot</button></p>';
+    echo '</div>';
+
+    echo '<hr class="ct-hr" style="margin:20px 0;"/>';
+    echo '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;flex-wrap:wrap;gap:10px;padding:12px;background:#f9f9f9;border-radius:4px;">';
+    echo '<h3 style="margin:0;font-size:16px;">Time Slots</h3>';
+    echo '<div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">';
+    echo '<label style="margin:0;font-weight:600;font-size:13px;">Filter by date:</label>';
     echo '<input type="text" class="ct-date" id="ct_table_date_filter" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="width:150px;">';
     echo '<button type="button" class="button" id="ct_clear_table_filter" style="white-space:nowrap;">Clear Filter</button>';
     echo '</div>';
     echo '</div>';
-    echo '<table class="widefat fixed striped" id="ct_slots_table">';
-    echo '<thead><tr><th>Date</th><th>Type</th><th>Start</th><th>End</th><th>Duration</th><th>Capacity</th><th>Max Bookings</th><th>Price (€)</th><th>Booked</th><th>Actions</th></tr></thead>';
-    echo '<tbody><tr><td colspan="10">Loading time slots…</td></tr></tbody>';
+    echo '<div id="ct_bulk_actions" style="margin-bottom:12px;padding:10px;background:#fff3cd;border-left:4px solid #ffc107;display:none;border-radius:4px;">';
+    echo '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">';
+    echo '<button type="button" class="button" id="ct_select_all_slots">Select All</button>';
+    echo '<button type="button" class="button" id="ct_deselect_all_slots">Deselect All</button>';
+    echo '<button type="button" class="button button-link-delete" id="ct_bulk_delete_slots" style="color:#b32d2e;font-weight:600;">Delete Selected</button>';
+    echo '<span id="ct_selected_count" style="margin-left:10px;font-weight:600;color:#333;"></span>';
+    echo '</div>';
+    echo '</div>';
+    echo '<table class="widefat fixed striped" id="ct_slots_table" style="margin-top:0;">';
+    echo '<thead><tr id="ct_table_header"></tr></thead>';
+    echo '<tbody><tr><td colspan="11" id="ct_loading_msg" style="text-align:center;padding:20px;">Loading time slots…</td></tr></tbody>';
     echo '</table>';
-    echo '<div id="ct_slots_pagination" style="margin-top:10px;display:none;"></div>';
+    echo '<div id="ct_slots_pagination" style="margin-top:15px;display:none;"></div>';
   }
 
   public function save_meta($post_id) {
@@ -924,6 +937,110 @@ final class CT_Turio_Timeslots {
       }
 
       wp_send_json_success(['ok' => true]);
+    }
+  }
+
+  public function delete_tour_slots($post_id) {
+    $post_type = get_post_type($post_id);
+    $allowed = apply_filters('ct_ts_post_types', ['turio-package']);
+    
+    if (!in_array($post_type, $allowed, true)) {
+      return;
+    }
+
+    if (!$this->ensure_table_exists()) {
+      return;
+    }
+
+    // Delete all slots for this tour
+    $this->db()->delete(
+      $this->db_table(),
+      ['tour_id' => $post_id],
+      ['%d']
+    );
+  }
+
+  public function ajax_admin_bulk_delete_slots() {
+    check_ajax_referer('ct_ts_admin_nonce', 'nonce');
+
+    $post_id = absint($_POST['post_id'] ?? 0);
+    $slot_ids_raw = isset($_POST['slot_ids']) ? $_POST['slot_ids'] : [];
+    
+    if (!is_array($slot_ids_raw) || empty($slot_ids_raw)) {
+      wp_send_json_error(['msg'=>'No slots selected.']);
+    }
+
+    $slot_ids = array_map('absint', $slot_ids_raw);
+    $slot_ids = array_filter($slot_ids, function($id) { return $id > 0; });
+
+    if (empty($slot_ids)) {
+      wp_send_json_error(['msg'=>'Invalid slot IDs.']);
+    }
+
+    $is_unsaved = ($post_id === 0);
+    
+    if (!$is_unsaved && !current_user_can('edit_post', $post_id)) {
+      wp_send_json_error(['msg'=>'No permission.']);
+    }
+
+    $deleted = 0;
+    $errors = [];
+
+    if ($is_unsaved) {
+      // Delete from transient
+      $user_id = get_current_user_id();
+      $meta_key = '_ct_timeslots_temp_' . $user_id;
+      $temp_slots = get_transient($meta_key);
+      if ($temp_slots === false) {
+        $temp_slots = [];
+      }
+      
+      foreach ($slot_ids as $slot_id) {
+        $found = false;
+        foreach ($temp_slots as $key => $slot_data) {
+          $temp_id = -abs(crc32($key));
+          if ($temp_id == $slot_id) {
+            unset($temp_slots[$key]);
+            $deleted++;
+            $found = true;
+            break;
+          }
+        }
+        if (!$found) {
+          $errors[] = $slot_id;
+        }
+      }
+      
+      if ($deleted > 0) {
+        set_transient($meta_key, $temp_slots, DAY_IN_SECONDS);
+      }
+    } else {
+      // Delete from database
+      if (!$this->ensure_table_exists()) {
+        wp_send_json_error(['msg'=>'DB table missing.']);
+      }
+
+      $placeholders = implode(',', array_fill(0, count($slot_ids), '%d'));
+      $query = $this->db()->prepare(
+        "DELETE FROM `{$this->db_table()}` WHERE `tour_id`=%d AND `id` IN ($placeholders)",
+        array_merge([$post_id], $slot_ids)
+      );
+      
+      $deleted = $this->db()->query($query);
+      
+      if ($deleted === false) {
+        wp_send_json_error(['msg' => 'DB error deleting slots.']);
+      }
+    }
+
+    if ($deleted > 0) {
+      wp_send_json_success([
+        'ok' => true,
+        'deleted' => $deleted,
+        'message' => sprintf('Deleted %d slot%s.', $deleted, $deleted === 1 ? '' : 's')
+      ]);
+    } else {
+      wp_send_json_error(['msg' => 'No slots were deleted.']);
     }
   }
 
