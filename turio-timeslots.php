@@ -97,9 +97,9 @@ final class CT_Turio_Timeslots {
     echo '<div style="background:#fff;border:1px solid #ddd;border-radius:8px;padding:24px;margin-bottom:24px;box-shadow:0 1px 3px rgba(0,0,0,0.05);">';
     echo '<h3 style="margin:0 0 20px 0;font-size:16px;font-weight:600;color:#23282d;border-bottom:2px solid #0073aa;padding-bottom:10px;">General Settings</h3>';
     
-    echo '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px;">';
+    echo '<div style="display:grid;grid-template-columns:repeat(2,1fr);gap:20px;align-items:start;">';
     
-    echo '<div>';
+    echo '<div style="grid-column:1/-1;">';
     echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Product Type</label>';
     echo '<select name="ct_mode" id="ct_mode" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;background:#fff;transition:border-color 0.2s;height:42px;box-sizing:border-box;">';
     echo '<option value="private" '.selected($mode,'private',false).'>Private (Tour)</option>';
@@ -169,7 +169,7 @@ final class CT_Turio_Timeslots {
     echo '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;gap:16px;padding-bottom:16px;border-bottom:2px solid #0073aa;">';
     echo '<h3 style="margin:0;font-size:16px;font-weight:600;color:#23282d;">Time Slots Management</h3>';
     echo '<div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">';
-    echo '<button type="button" class="button button-primary" id="ct_load_all_slots" style="white-space:nowrap;padding:8px 16px;font-weight:600;background:#0073aa;border-color:#0073aa;color:#fff;">📋 Load All</button>';
+    echo '<button type="button" class="button button-primary" id="ct_load_all_slots" style="white-space:nowrap;padding:8px 16px;font-weight:600;background:#0073aa;border-color:#0073aa;color:#fff;height:32px;box-sizing:border-box;display:inline-flex;align-items:center;">📋 Load All</button>';
     echo '<label style="margin:0;font-weight:600;font-size:13px;color:#646970;">Filter by date:</label>';
     echo '<input type="text" class="ct-date" id="ct_table_date_filter" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="width:150px;padding:8px;border:1px solid #8c8f94;border-radius:4px;font-size:13px;height:32px;box-sizing:border-box;">';
     echo '<button type="button" class="button" id="ct_clear_table_filter" style="white-space:nowrap;padding:8px 16px;height:32px;box-sizing:border-box;">Clear Filter</button>';
