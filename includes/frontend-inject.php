@@ -47,6 +47,7 @@ add_action('egns_tour_booking_form', function() {
     echo '<input type="hidden" name="ct_slot_id" id="ct_slot_id_hidden" value="">';
     echo '<input type="hidden" name="ct_mode" id="ct_mode_hidden" value="">';
     echo '<input type="hidden" name="ct_people" id="ct_people_hidden" value="">';
+    echo '<input type="hidden" name="ct_extras_json" id="ct_extras_hidden" value="">';
 }, 5);
 
 add_filter('body_class', function ($classes) {

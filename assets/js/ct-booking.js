@@ -420,6 +420,21 @@
       $('#ct_slot_id_hidden').val(selectedSlot ? selectedSlot.id : '');
       $('#ct_mode_hidden').val(mode);
       $('#ct_people_hidden').val(people);
+      
+      // Capture selected extras
+      const selectedExtras = [];
+      $extras.filter(':checked').each(function() {
+        const $extra = $(this);
+        const title = $extra.closest('label').find('.ct-extra-title').text().trim();
+        selectedExtras.push({
+          label: title || $extra.data('id') || '',
+          title: title,
+          price: parseFloat($extra.data('price') || 0)
+        });
+      });
+      
+      // Store extras as JSON in hidden field
+      $('#ct_extras_hidden').val(JSON.stringify(selectedExtras));
     }
 
     // Update total price
@@ -532,7 +547,39 @@
 
     // Extras change
     $extras.on('change', function() {
+      updateHiddenFields();
       updateTotal();
+    });
+
+    // Form submission validation and data sync
+    $(document).on('submit', 'form.cart', function(e) {
+      // Update all hidden fields before submission
+      updateHiddenFields();
+      
+      // Validate required fields
+      if (!selectedDate || !selectedDate.trim()) {
+        e.preventDefault();
+        alert('Please select a booking date.');
+        return false;
+      }
+      
+      if (!selectedSlot || !selectedSlot.id) {
+        e.preventDefault();
+        alert('Please select a time slot.');
+        return false;
+      }
+      
+      // Ensure hidden fields are populated
+      const $dateField = $('#ct_date_hidden');
+      const $slotField = $('#ct_slot_id_hidden');
+      
+      if (!$dateField.val() || !$slotField.val()) {
+        e.preventDefault();
+        alert('Please complete your booking selection.');
+        return false;
+      }
+      
+      return true;
     });
 
     // Initialize
