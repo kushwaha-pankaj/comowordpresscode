@@ -1,6 +1,15 @@
 <?php
 if (!defined('ABSPATH')) exit;
 
+/* Force EUR currency for all price displays */
+add_filter('woocommerce_currency', function($currency) {
+  return 'EUR';
+}, 999);
+
+add_filter('woocommerce_currency_symbol', function($symbol, $currency) {
+  return '€';
+}, 999, 2);
+
 /* helper to read $_REQUEST */
 if (!function_exists('ct_req')) {
   function ct_req($key, $default = '') {
@@ -259,7 +268,7 @@ add_action('woocommerce_after_cart_item_name', function($cart_item, $cart_item_k
     $extras_html = '<div class="ct-cart-meta-section"><strong class="ct-cart-extras-title">✨ ' . __('Selected Extras', 'comotour') . '</strong><div class="ct-cart-extras">';
     foreach ($cart_item['extras'] as $extra) {
       $label = esc_html($extra['label']);
-      $price = wc_price(floatval($extra['price']));
+      $price = wc_price(floatval($extra['price']), array('currency' => 'EUR'));
       $extras_html .= '<div class="ct-cart-extra-item">';
       $extras_html .= '<span class="ct-cart-extra-label">✨ ' . $label . '</span>';
       $extras_html .= '<span class="ct-cart-extra-price">+ ' . $price . '</span>';
@@ -303,7 +312,7 @@ add_action('woocommerce_checkout_create_order_line_item', function ($item, $cart
   if (!empty($values['extras']) && is_array($values['extras'])) {
     foreach ($values['extras'] as $extra) {
       $label = sanitize_text_field($extra['label']);
-      $price = wc_price(floatval($extra['price']));
+      $price = wc_price(floatval($extra['price']), array('currency' => 'EUR'));
       $item->add_meta_data('Extra', "{$label} - {$price}");
     }
   }

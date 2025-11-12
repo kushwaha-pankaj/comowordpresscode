@@ -459,15 +459,9 @@
       $totalPrice.text(formatPrice(total));
     }
 
-    // Format price
+    // Format price - always use EUR
     function formatPrice(amount) {
-      if (currency === 'EUR' || currency === '€') {
-        return '€' + parseFloat(amount).toFixed(2);
-      } else if (currency === 'USD' || currency === '$') {
-        return '$' + parseFloat(amount).toFixed(2);
-      } else {
-        return parseFloat(amount).toFixed(2) + ' ' + currency;
-      }
+      return '€' + parseFloat(amount).toFixed(2);
     }
 
     // Update people control buttons state

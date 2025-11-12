@@ -25,7 +25,7 @@ add_action('wp_enqueue_scripts', function () {
 
             wp_localize_script('ct-booking-js', 'CT_BOOKING', [
                 'postId' => get_the_ID(),
-                'currency' => class_exists('WooCommerce') ? get_woocommerce_currency() : 'EUR',
+                'currency' => 'EUR', // Force EUR currency
                 'restBase' => esc_url_raw(rest_url('ct-timeslots/v1')),
             ]);
         }

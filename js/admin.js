@@ -256,7 +256,7 @@ jQuery(function($){
       var maxBookingsValue = s.max_bookings || s.capacity || 1;
       row.append('<td style="text-align:center;font-weight:600;color:#23282d;vertical-align:middle;">'+maxBookingsValue+'</td>');
       
-      row.append('<td>'+Number(s.price).toFixed(2)+'</td>');
+      row.append('<td>€'+Number(s.price).toFixed(2)+'</td>');
       row.append('<td>'+(s.booked||0)+'</td>');
       row.append('<td><button class="button button-link-delete ct-del" data-id="'+s.id+'">Delete</button></td>');
       $tb.append(row);
