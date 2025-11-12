@@ -534,13 +534,16 @@ jQuery(function($){
     var start = normTime($('#ct_s_start').val());
     var end   = normTime($('#ct_s_end').val());
     var cap   = parseInt($('#ct_s_capacity').val()||'0',10);
+    var maxBookings = parseInt($('#ct_s_max_bookings').val()||'0',10);
     var price = parseFloat($('#ct_s_price').val()||'0');
     var mode  = $('#ct_mode').val() || 'shared';
-    var maxPeople = getCurrentMaxPeople();
 
     if(!start || !end){ toast('Please fill Start and End (HH:MM).'); return; }
     if(cap<1){ toast('Capacity must be at least 1.'); return; }
-    if(maxPeople > 0 && cap > maxPeople){ toast('Capacity cannot exceed Max number of people ('+maxPeople+').'); return; }
+    if (isNaN(maxBookings) || maxBookings < 1) {
+      toast('Please enter max bookings (minimum 1 booking).');
+      return;
+    }
     if(price<=0){ toast('Please enter a Price.'); return; }
 
     $.post(CT_TS_ADMIN.ajax, {
@@ -552,6 +555,7 @@ jQuery(function($){
       start:  start,
       end:    end,
       capacity: cap,
+      max_bookings: maxBookings,
       price:  price
     }, function(res){
       console.log('ct_admin_add_slot response:', res);
@@ -564,7 +568,7 @@ jQuery(function($){
       if (res.data && typeof res.data.capacity_used !== 'undefined') {
         console.log('Server resolved capacity_used =', res.data.capacity_used);
       }
-      $('#ct_s_start,#ct_s_end,#ct_s_capacity,#ct_s_price').val('');
+      $('#ct_s_start,#ct_s_end,#ct_s_capacity,#ct_s_max_bookings,#ct_s_price').val('');
       // Reload all slots after adding
       currentPage = 1;
       loadAllSlots(1, false);

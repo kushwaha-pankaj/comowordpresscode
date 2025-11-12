@@ -101,7 +101,7 @@ final class CT_Turio_Timeslots {
     
     echo '<div>';
     echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Product Type</label>';
-    echo '<select name="ct_mode" id="ct_mode" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;background:#fff;transition:border-color 0.2s;">';
+    echo '<select name="ct_mode" id="ct_mode" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;background:#fff;transition:border-color 0.2s;height:42px;box-sizing:border-box;">';
     echo '<option value="private" '.selected($mode,'private',false).'>Private (Tour)</option>';
     echo '<option value="shared"  '.selected($mode,'shared',false).'>Shared (Per-Seat)</option>';
     echo '</select>';
@@ -109,19 +109,19 @@ final class CT_Turio_Timeslots {
 
     echo '<div>';
     echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Date Range (From)</label>';
-    echo '<input type="text" class="ct-date" name="ct_date_from" id="ct_date_from" value="'.esc_attr($date_from).'" placeholder="YYYY-MM-DD" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;">';
+    echo '<input type="text" class="ct-date" name="ct_date_from" id="ct_date_from" value="'.esc_attr($date_from).'" placeholder="YYYY-MM-DD" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;height:42px;box-sizing:border-box;">';
     echo '</div>';
 
     echo '<div>';
     echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Date Range (To)</label>';
-    echo '<input type="text" class="ct-date" name="ct_date_to" id="ct_date_to" value="'.esc_attr($date_to).'" placeholder="YYYY-MM-DD" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;">';
+    echo '<input type="text" class="ct-date" name="ct_date_to" id="ct_date_to" value="'.esc_attr($date_to).'" placeholder="YYYY-MM-DD" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;height:42px;box-sizing:border-box;">';
     echo '</div>';
 
     echo '<div>';
     echo '<label style="display:block;margin-bottom:8px;font-weight:600;color:#23282d;font-size:13px;">Specific Date (Optional)</label>';
     echo '<div style="display:flex;gap:8px;">';
-    echo '<input type="text" class="ct-date" name="ct_specific_date" id="ct_specific_date" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="flex:1;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;">';
-    echo '<button type="button" class="button" id="ct_clear_specific_date" style="white-space:nowrap;padding:10px 16px;">Clear</button>';
+    echo '<input type="text" class="ct-date" name="ct_specific_date" id="ct_specific_date" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="flex:1;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;height:42px;box-sizing:border-box;">';
+    echo '<button type="button" class="button" id="ct_clear_specific_date" style="white-space:nowrap;padding:10px 16px;height:42px;box-sizing:border-box;line-height:1;">Clear</button>';
     echo '</div>';
     echo '</div>';
 
@@ -153,12 +153,13 @@ final class CT_Turio_Timeslots {
     echo '<span style="background:#00a32a;color:#fff;padding:4px 12px;border-radius:12px;font-size:11px;font-weight:600;text-transform:uppercase;">Shared</span>';
     echo '</div>';
     echo '<div style="background:#f0f6fc;border-left:4px solid #00a32a;padding:12px 16px;margin-bottom:20px;border-radius:4px;">';
-    echo '<p style="margin:0;font-size:13px;color:#1d2327;line-height:1.6;">Inventory above limits how many shared slots you can sell overall. Use capacity below for seats available in this slot.</p>';
+    echo '<p style="margin:0;font-size:13px;color:#1d2327;line-height:1.6;"><strong>💡 Tip:</strong> Leave "Specific Date" empty to duplicate this slot across the selected date range. <strong>Capacity</strong> = seats available per booking. <strong>Max Bookings</strong> = how many times this slot can be booked.</p>';
     echo '</div>';
     echo '<div class="ct-row" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:16px;">';
     echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Start Time</label><input type="text" id="ct_s_start" class="ct-time" placeholder="10:00" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
     echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">End Time</label><input type="text" id="ct_s_end" class="ct-time" placeholder="11:00" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
-    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Capacity</label><input type="number" min="1" id="ct_s_capacity" placeholder="20" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Capacity (Seats)</label><input type="number" min="1" id="ct_s_capacity" placeholder="20" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
+    echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Max Bookings</label><input type="number" min="1" id="ct_s_max_bookings" placeholder="10" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
     echo '<div><label style="display:block;margin-bottom:6px;font-size:12px;font-weight:600;color:#646970;">Price per Person (€)</label><input type="number" step="0.01" id="ct_s_price" placeholder="50.00" style="width:100%;padding:10px;border:1px solid #8c8f94;border-radius:4px;font-size:14px;"></div>';
     echo '</div>';
     echo '<button class="button" id="ct-add-s-slot" style="padding:12px 24px;font-size:14px;font-weight:600;border-radius:4px;background:#00a32a;border-color:#00a32a;color:#fff;box-shadow:0 1px 2px rgba(0,0,0,0.1);">+ Add Shared Time Slot</button>';
@@ -757,14 +758,20 @@ final class CT_Turio_Timeslots {
 
     // No longer using tour-level max_people - each slot manages its own max_bookings
     if ($mode === 'private') {
-      // For private tours, capacity is required
+      // For private tours, capacity and max_bookings are required
       if ($capacity === null || $capacity < 1) {
         wp_send_json_error(['msg' => 'Capacity is required for private tours.']);
       }
+      if ($max_bookings === null || $max_bookings < 1) {
+        wp_send_json_error(['msg' => 'Max bookings is required for private tours.']);
+      }
     } else {
-      // For shared tours, capacity is required
+      // For shared tours, capacity and max_bookings are required
       if ($capacity === null || $capacity < 1) {
         wp_send_json_error(['msg' => 'Capacity is required for shared tours.']);
+      }
+      if ($max_bookings === null || $max_bookings < 1) {
+        wp_send_json_error(['msg' => 'Max bookings is required for shared tours.']);
       }
     }
 
