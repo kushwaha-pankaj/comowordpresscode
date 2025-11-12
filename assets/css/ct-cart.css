@@ -140,6 +140,88 @@
   border-radius: 8px;
 }
 
+/* Proceed to Checkout Button - Override all possible selectors */
+.woocommerce-cart .wc-proceed-to-checkout a,
+.woocommerce-cart .wc-proceed-to-checkout a.button,
+.woocommerce-cart .wc-proceed-to-checkout a.checkout-button,
+.woocommerce-cart .wc-proceed-to-checkout .checkout-button,
+.woocommerce-cart .wc-proceed-to-checkout button,
+.woocommerce-cart .wc-proceed-to-checkout button.button,
+.woocommerce-cart .wc-proceed-to-checkout button.checkout-button,
+.woocommerce-cart .wc-proceed-to-checkout input.button,
+.woocommerce-cart .wc-proceed-to-checkout input.checkout-button {
+  background-color: #006D77 !important;
+  border-color: #006D77 !important;
+  color: #fff !important;
+  padding: 14px 28px !important;
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  border-radius: 8px !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.5px !important;
+  transition: all 0.3s ease !important;
+  display: inline-block !important;
+  text-align: center !important;
+  text-decoration: none !important;
+  box-shadow: 0 2px 8px rgba(0, 109, 119, 0.2) !important;
+  width: 100% !important;
+}
+
+.woocommerce-cart .wc-proceed-to-checkout a:hover,
+.woocommerce-cart .wc-proceed-to-checkout a.button:hover,
+.woocommerce-cart .wc-proceed-to-checkout a.checkout-button:hover,
+.woocommerce-cart .wc-proceed-to-checkout .checkout-button:hover,
+.woocommerce-cart .wc-proceed-to-checkout button:hover,
+.woocommerce-cart .wc-proceed-to-checkout button.button:hover,
+.woocommerce-cart .wc-proceed-to-checkout button.checkout-button:hover,
+.woocommerce-cart .wc-proceed-to-checkout input.button:hover,
+.woocommerce-cart .wc-proceed-to-checkout input.checkout-button:hover {
+  background-color: #005a63 !important;
+  border-color: #005a63 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 12px rgba(0, 109, 119, 0.3) !important;
+  transform: translateY(-2px) !important;
+}
+
+/* Override any green buttons in cart/checkout */
+.woocommerce-cart .button.alt,
+.woocommerce-cart a.button.alt,
+.woocommerce-cart button.button.alt,
+.woocommerce-cart input.button.alt,
+.woocommerce-checkout .button.alt,
+.woocommerce-checkout a.button.alt,
+.woocommerce-checkout button.button.alt,
+.woocommerce-checkout input.button.alt {
+  background-color: #006D77 !important;
+  border-color: #006D77 !important;
+  color: #fff !important;
+}
+
+.woocommerce-cart .button.alt:hover,
+.woocommerce-cart a.button.alt:hover,
+.woocommerce-cart button.button.alt:hover,
+.woocommerce-cart input.button.alt:hover,
+.woocommerce-checkout .button.alt:hover,
+.woocommerce-checkout a.button.alt:hover,
+.woocommerce-checkout button.button.alt:hover,
+.woocommerce-checkout input.button.alt:hover {
+  background-color: #005a63 !important;
+  border-color: #005a63 !important;
+  color: #fff !important;
+}
+
+/* Cart totals - change green colors to theme color */
+.woocommerce-cart .cart_totals .shop_table .order-total th,
+.woocommerce-cart .cart_totals .shop_table .order-total td {
+  color: #006D77 !important;
+  font-weight: 700 !important;
+}
+
+.woocommerce-cart .cart_totals .shop_table .cart-subtotal th,
+.woocommerce-cart .cart_totals .shop_table .cart-subtotal td {
+  color: #006D77 !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .ct-cart-meta-label {

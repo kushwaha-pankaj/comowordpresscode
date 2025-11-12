@@ -14,8 +14,8 @@
   --ct-border: #e6f0ee;
   --ct-bg: #ffffff;
   --ct-soft: #f8fbfa;
-  --ct-green: #1caf5f;
-  --ct-green-light: #e8f9f2;
+  --ct-green: #006D77;
+  --ct-green-light: rgba(0, 109, 119, 0.1);
   max-width: 100%;
   width: 100%;
   max-width: 500px;
