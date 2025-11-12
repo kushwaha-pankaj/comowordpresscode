@@ -886,7 +886,8 @@ final class CT_Turio_Timeslots {
     check_ajax_referer('ct_ts_admin_nonce', 'nonce');
 
     $post_id = absint($_POST['post_id'] ?? 0);
-    $slot_id = absint($_POST['slot_id'] ?? 0);
+    // Don't use absint() for slot_id - we need to preserve negative IDs for unsaved posts
+    $slot_id = isset($_POST['slot_id']) ? intval($_POST['slot_id']) : 0;
 
     $is_unsaved = ($post_id === 0);
     
@@ -970,8 +971,9 @@ final class CT_Turio_Timeslots {
       wp_send_json_error(['msg'=>'No slots selected.']);
     }
 
-    $slot_ids = array_map('absint', $slot_ids_raw);
-    $slot_ids = array_filter($slot_ids, function($id) { return $id > 0; });
+    // Don't use absint() - we need to preserve negative IDs for unsaved posts
+    $slot_ids = array_map('intval', $slot_ids_raw);
+    $slot_ids = array_filter($slot_ids, function($id) { return $id != 0; });
 
     if (empty($slot_ids)) {
       wp_send_json_error(['msg'=>'Invalid slot IDs.']);
@@ -1015,15 +1017,22 @@ final class CT_Turio_Timeslots {
         set_transient($meta_key, $temp_slots, DAY_IN_SECONDS);
       }
     } else {
-      // Delete from database
+      // Delete from database (only positive IDs for saved posts)
       if (!$this->ensure_table_exists()) {
         wp_send_json_error(['msg'=>'DB table missing.']);
       }
 
-      $placeholders = implode(',', array_fill(0, count($slot_ids), '%d'));
+      // Filter to only positive IDs for database deletion
+      $db_slot_ids = array_filter($slot_ids, function($id) { return $id > 0; });
+      
+      if (empty($db_slot_ids)) {
+        wp_send_json_error(['msg' => 'No valid slot IDs for database deletion.']);
+      }
+
+      $placeholders = implode(',', array_fill(0, count($db_slot_ids), '%d'));
       $query = $this->db()->prepare(
         "DELETE FROM `{$this->db_table()}` WHERE `tour_id`=%d AND `id` IN ($placeholders)",
-        array_merge([$post_id], $slot_ids)
+        array_merge([$post_id], $db_slot_ids)
       );
       
       $deleted = $this->db()->query($query);
