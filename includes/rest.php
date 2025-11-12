@@ -12,6 +12,11 @@ add_action('rest_api_init', function () {
         'callback' => 'ctts_get_slots',
         'permission_callback' => '__return_true'
     ]);
+    register_rest_route('ct-timeslots/v1', '/all-slots', [
+        'methods' => 'GET',
+        'callback' => 'ctts_get_all_slots',
+        'permission_callback' => '__return_true'
+    ]);
 });
 
 function ctts_get_days(WP_REST_Request $req) {
@@ -136,4 +141,89 @@ function ctts_get_slots(WP_REST_Request $req) {
     }
 
     return rest_ensure_response(['ok' => true, 'slots' => $slots]);
+}
+
+function ctts_get_all_slots(WP_REST_Request $req) {
+    global $wpdb;
+    $post_id = intval($req->get_param('post_id'));
+    $from = sanitize_text_field($req->get_param('from'));
+    $to = sanitize_text_field($req->get_param('to'));
+    $mode = sanitize_text_field($req->get_param('mode')) ?: 'private';
+
+    if (!$post_id || !$from || !$to) {
+        return rest_ensure_response(['ok' => false, 'msg' => 'Invalid parameters.']);
+    }
+
+    // FIX: Validate date format
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $from) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $to)) {
+        return rest_ensure_response(['ok' => false, 'msg' => 'Invalid date format.']);
+    }
+
+    if (!in_array($mode, ['private', 'shared'], true)) {
+        $mode = 'private';
+    }
+
+    $table = $wpdb->prefix . 'turio_timeslots';
+    $exists = $wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $table));
+    if (!$exists) {
+        return rest_ensure_response(['ok' => false, 'msg' => 'Timeslots table missing.']);
+    }
+
+    // Fetch all slots for the date range in one query
+    $rows = $wpdb->get_results($wpdb->prepare("
+        SELECT id, `date`, `time`, duration, capacity, booked, price, mode, COALESCE(max_bookings, capacity) as max_bookings
+        FROM {$table}
+        WHERE tour_id=%d 
+          AND `date` BETWEEN %s AND %s
+          AND `mode`=%s
+        ORDER BY `date` ASC, `time` ASC
+    ", $post_id, $from, $to, $mode), ARRAY_A);
+
+    // Group slots by date
+    $slotsByDate = [];
+    $days = [];
+    
+    foreach ($rows as $r) {
+        $date = $r['date'];
+        $start = $r['time'];
+        $duration = intval($r['duration']);
+        
+        list($sh, $sm) = array_map('intval', explode(':', $start));
+        $end_minutes = ($sh * 60 + $sm + $duration);
+
+        // FIX: Handle midnight crossing properly
+        if ($end_minutes >= 24 * 60) {
+            $end_minutes = $end_minutes % (24 * 60);
+        }
+
+        $eh = floor($end_minutes / 60);
+        $em = $end_minutes % 60;
+        $end = sprintf('%02d:%02d', $eh, $em);
+        
+        $slot = [
+            'id' => intval($r['id']),
+            'time' => $r['time'],
+            'end' => $end,
+            'duration' => intval($r['duration']),
+            'capacity' => intval($r['capacity']),
+            'booked' => intval($r['booked']),
+            'max_bookings' => intval($r['max_bookings']),
+            'price' => (float)$r['price'],
+            'mode' => $r['mode']
+        ];
+        
+        if (!isset($slotsByDate[$date])) {
+            $slotsByDate[$date] = [];
+            $days[$date] = 0;
+        }
+        
+        $slotsByDate[$date][] = $slot;
+        $days[$date]++;
+    }
+
+    return rest_ensure_response([
+        'ok' => true, 
+        'slots' => $slotsByDate,
+        'days' => $days
+    ]);
 }

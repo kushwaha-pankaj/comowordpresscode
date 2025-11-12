@@ -48,6 +48,7 @@
     let selectedSlot = null;
     let availableDays = {};
     let availableSlots = [];
+    let allSlotsCache = {}; // Cache all slots by date
     let picker = null;
     let people = 1;
 
@@ -110,7 +111,48 @@
       }
     }
 
-    // Load available days from REST API
+    // Load all slots and available days from REST API (preload everything)
+    function loadAllSlotsAndDays() {
+      const today = new Date();
+      const nextYear = new Date();
+      nextYear.setFullYear(today.getFullYear() + 1);
+
+      const from = today.toISOString().split('T')[0];
+      const to = nextYear.toISOString().split('T')[0];
+
+      // Use the new bulk endpoint to get all slots at once
+      $.ajax({
+        url: restBase + '/all-slots',
+        method: 'GET',
+        data: {
+          post_id: postId,
+          from: from,
+          to: to,
+          mode: mode
+        },
+        success: function(response) {
+          if (response && response.ok) {
+            // Cache all slots by date
+            if (response.slots) {
+              allSlotsCache = response.slots;
+            }
+            // Set available days for calendar highlighting
+            if (response.days) {
+              availableDays = response.days;
+            }
+            markAvailableDays();
+            console.log('ComoTour Booking: All slots preloaded for', Object.keys(allSlotsCache).length, 'dates');
+          }
+        },
+        error: function(xhr, status, error) {
+          console.error('ComoTour Booking: Error loading all slots', error, xhr);
+          // Fallback to old method if bulk endpoint fails
+          loadAvailableDays();
+        }
+      });
+    }
+
+    // Fallback: Load available days only (old method)
     function loadAvailableDays() {
       const today = new Date();
       const nextYear = new Date();
@@ -185,8 +227,16 @@
       loadSlotsForDate(iso);
     }
 
-    // Load slots for selected date
+    // Load slots for selected date (uses cache if available)
     function loadSlotsForDate(date) {
+      // Check cache first for instant response
+      if (allSlotsCache[date] && allSlotsCache[date].length > 0) {
+        availableSlots = allSlotsCache[date];
+        renderSlots();
+        return;
+      }
+
+      // If not in cache, show loading and fetch from API (fallback)
       $slotsList.html('<div class="ct-slot-hint">Loading times...</div>');
 
       $.ajax({
@@ -200,6 +250,8 @@
         success: function(response) {
           if (response && response.ok && response.slots && response.slots.length > 0) {
             availableSlots = response.slots;
+            // Cache it for future use
+            allSlotsCache[date] = response.slots;
             renderSlots();
           } else {
             $slotsList.html('<div class="ct-slot-hint">No time slots available for this date.</div>');
@@ -383,7 +435,7 @@
 
     // Initialize
     initCalendar();
-    loadAvailableDays();
+    loadAllSlotsAndDays(); // Preload all slots for instant response
   });
 })();
 
