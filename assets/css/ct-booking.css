@@ -292,18 +292,18 @@
   color: var(--ct-accent-2);
 }
 
-/* Days with slots - light green, smooth transition */
+/* Days with slots - highlighted with theme color #006D77 */
 .litepicker .day-item.ct-day-has-slots {
-  background: var(--ct-green-light) !important;
-  color: var(--ct-green) !important;
+  background: rgba(0, 109, 119, 0.1) !important;
+  color: #006D77 !important;
   font-weight: 700;
-  border-color: var(--ct-green) !important;
+  border: 2px solid #006D77 !important;
 }
 
 .litepicker .day-item.ct-day-has-slots:hover {
-  background: #d4f4e3 !important;
-  color: var(--ct-green) !important;
-  border-color: var(--ct-green) !important;
+  background: #006D77 !important;
+  color: #fff !important;
+  border-color: #006D77 !important;
 }
 
 /* Today indicator */
@@ -382,80 +382,112 @@
 #ct_slots_list {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
 }
 
-.ct-slot-label {
-  display: block;
-  cursor: pointer;
-}
-
-.ct-slot-radio {
-  display: none;
-}
-
-.ct-slot-pill {
+.ct-slots-grid {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.ct-slot-btn {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   padding: 16px;
   border: 2px solid var(--ct-border);
   border-radius: 12px;
-  background: white !important;
+  background: white;
+  cursor: pointer;
   transition: all 0.2s ease;
   box-sizing: border-box;
+  text-align: left;
+  width: 100%;
 }
 
-.ct-slot-pill:hover {
-  border-color: var(--ct-accent);
-  box-shadow: 0 4px 12px rgba(11, 124, 118, 0.1);
+.ct-slot-btn:hover:not(:disabled) {
+  border-color: #006D77;
+  box-shadow: 0 4px 12px rgba(0, 109, 119, 0.15);
+  transform: translateY(-2px);
 }
 
-/* Selected slot - GREEN */
-.ct-slot-radio:checked + .ct-slot-pill {
-  border-color: var(--ct-green) !important;
-  background: var(--ct-green-light) !important;
-  border-radius: 12px;
+.ct-slot-btn.ct-slot-selected {
+  border-color: #006D77 !important;
+  background: rgba(0, 109, 119, 0.08) !important;
+  box-shadow: 0 4px 12px rgba(0, 109, 119, 0.2);
 }
 
-.ct-slot-pill.booked {
-  opacity: 0.5;
+.ct-slot-btn.ct-slot-unavailable {
+  background: #f5f5f5 !important;
+  border-color: #dc3545 !important;
+  opacity: 0.7;
   cursor: not-allowed;
-  border-color: #ddd;
+  pointer-events: none;
 }
 
-.ct-slot-left {
+.ct-slot-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+}
+
+.ct-slot-time {
+  font-weight: 700;
+  color: var(--ct-accent-2);
+  font-size: 16px;
   flex: 1;
 }
 
-.slot-time {
+.ct-slot-price {
   font-weight: 800;
-  color: var(--ct-accent-2);
-  font-size: 15px;
-  margin-bottom: 4px;
+  color: #006D77;
+  font-size: 18px;
+  white-space: nowrap;
 }
 
-.slot-meta {
-  color: var(--ct-muted);
-  font-size: 13px;
+.ct-slot-details {
   display: flex;
+  justify-content: space-between;
+  align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px solid var(--ct-border);
 }
 
-.slot-meta-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
+.ct-slot-capacity {
+  color: var(--ct-muted);
+  font-size: 13px;
+  font-weight: 600;
 }
 
-.slot-price {
-  font-weight: 900;
-  color: var(--ct-accent-2);
-  font-size: 16px;
-  margin-left: 12px;
-  white-space: nowrap;
-  text-align: right;
+.ct-slot-remaining {
+  color: var(--ct-green);
+  font-size: 13px;
+  font-weight: 600;
+  background: var(--ct-green-light);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.ct-slot-soldout {
+  color: #dc3545;
+  font-size: 13px;
+  font-weight: 700;
+  background: #ffe6e6;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.ct-slot-btn.ct-slot-unavailable .ct-slot-time,
+.ct-slot-btn.ct-slot-unavailable .ct-slot-price {
+  color: #999 !important;
+}
+
+.ct-slot-btn.ct-slot-unavailable .ct-slot-capacity {
+  color: #999 !important;
 }
 
 .ct-slot-hint {

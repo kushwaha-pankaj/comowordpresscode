@@ -98,7 +98,11 @@
           if (calendarEl && $dateContainer.length) {
             $dateContainer.append(calendarEl);
           }
-        }, 100);
+          // Re-mark days after calendar is moved
+          if (Object.keys(availableDays).length > 0) {
+            markAvailableDays();
+          }
+        }, 200);
 
         console.log('ComoTour Booking: Calendar initialized');
       } catch (e) {
@@ -138,21 +142,39 @@
 
     // Mark days with available slots in calendar
     function markAvailableDays() {
-      if (!picker || !picker.calendars || !picker.calendars[0]) return;
+      if (!picker) return;
 
       // Wait a bit for calendar to render
       setTimeout(function() {
+        if (!picker.calendars || picker.calendars.length === 0) {
+          // Try again if calendar not ready
+          setTimeout(markAvailableDays, 200);
+          return;
+        }
+
         Object.keys(availableDays).forEach(function(dateStr) {
-          // Try multiple selectors for Litepicker
-          const dayEl = picker.calendars[0].querySelector(`[data-time="${dateStr}"]`) ||
-                       picker.calendars[0].querySelector(`[data-day="${dateStr}"]`) ||
-                       picker.calendars[0].querySelector(`[data-date="${dateStr}"]`);
-          
-          if (dayEl) {
-            dayEl.classList.add('ct-day-has-slots');
+          // Try multiple selectors for Litepicker - check all calendars
+          for (let i = 0; i < picker.calendars.length; i++) {
+            const calendar = picker.calendars[i];
+            if (!calendar) continue;
+            
+            // Find all day items and check their date
+            const allDays = calendar.querySelectorAll('.day-item');
+            allDays.forEach(function(day) {
+              // Try different ways to get the date
+              let dayDate = day.getAttribute('data-time') || 
+                           day.getAttribute('data-day') || 
+                           day.getAttribute('data-date') ||
+                           day.getAttribute('data-lp-day');
+              
+              // Check if this day matches our date string
+              if (dayDate === dateStr) {
+                day.classList.add('ct-day-has-slots');
+              }
+            });
           }
         });
-      }, 200);
+      }, 400);
     }
 
     // Handle date selection
@@ -202,24 +224,34 @@
 
       let html = '<div class="ct-slots-grid">';
       availableSlots.forEach(function(slot) {
-        const available = mode === 'shared' 
-          ? Math.max(0, slot.capacity - slot.booked)
-          : (slot.max_bookings || slot.capacity) - slot.booked;
-        
-        const isAvailable = available > 0;
+        // Calculate remaining slots (how many more times this slot can be booked)
+        const remainingSlots = Math.max(0, (slot.max_bookings || slot.capacity) - slot.booked);
+        const isAvailable = remainingSlots > 0;
         const timeLabel = slot.time + ' – ' + slot.end;
+        const capacity = slot.capacity || 1;
         
         html += '<button type="button" class="ct-slot-btn' + 
                 (selectedSlot && selectedSlot.id === slot.id ? ' ct-slot-selected' : '') +
                 (!isAvailable ? ' ct-slot-unavailable' : '') +
                 '" data-slot-id="' + slot.id + 
                 '" data-price="' + slot.price + 
+                '" data-capacity="' + capacity +
                 '" ' + (!isAvailable ? 'disabled' : '') + '>';
+        
+        html += '<div class="ct-slot-header">';
         html += '<span class="ct-slot-time">' + timeLabel + '</span>';
         html += '<span class="ct-slot-price">' + formatPrice(slot.price) + '</span>';
-        if (mode === 'shared' && isAvailable) {
-          html += '<span class="ct-slot-available">' + available + ' seats left</span>';
+        html += '</div>';
+        
+        html += '<div class="ct-slot-details">';
+        html += '<span class="ct-slot-capacity">Capacity: ' + capacity + ' people</span>';
+        if (isAvailable) {
+          html += '<span class="ct-slot-remaining">' + remainingSlots + ' slot' + (remainingSlots !== 1 ? 's' : '') + ' available</span>';
+        } else {
+          html += '<span class="ct-slot-soldout">Fully Booked</span>';
         }
+        html += '</div>';
+        
         html += '</button>';
       });
       html += '</div>';
@@ -241,6 +273,16 @@
       // Update UI
       $slotsList.find('.ct-slot-btn').removeClass('ct-slot-selected');
       $slotsList.find('.ct-slot-btn[data-slot-id="' + slotId + '"]').addClass('ct-slot-selected');
+
+      // Update max people display and limit based on slot capacity
+      const slotCapacity = selectedSlot.capacity || 1;
+      $maxDisplay.text(slotCapacity);
+      
+      // Adjust current people count if it exceeds capacity
+      if (people > slotCapacity) {
+        people = slotCapacity;
+        $peopleInput.val(people);
+      }
 
       // Update hidden fields for form submission
       updateHiddenFields();
@@ -299,7 +341,14 @@
     });
 
     $peoplePlus.on('click', function() {
-      const maxPeople = parseInt($maxDisplay.text()) || 999;
+      // Get max from selected slot's capacity, or from display if no slot selected
+      let maxPeople = 999;
+      if (selectedSlot && selectedSlot.capacity) {
+        maxPeople = selectedSlot.capacity;
+      } else {
+        maxPeople = parseInt($maxDisplay.text()) || 999;
+      }
+      
       if (people < maxPeople) {
         people++;
         $peopleInput.val(people);
@@ -318,6 +367,11 @@
       if (picker) {
         picker.clearSelection();
       }
+      // Reset max people display to original value
+      const originalMax = parseInt($card.data('max-people')) || 10;
+      $maxDisplay.text(originalMax);
+      people = 1;
+      $peopleInput.val(people);
       updateHiddenFields();
       updateTotal();
     });
