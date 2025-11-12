@@ -402,58 +402,63 @@
   border-radius: 12px;
   background: white;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: border-color 0.3s ease,
+              background-color 0.3s ease,
+              box-shadow 0.3s ease,
+              transform 0.3s ease;
   box-sizing: border-box;
   text-align: left;
   width: 100%;
+  position: relative;
 }
 
 .ct-slot-btn:hover:not(:disabled) {
   border-color: #006D77;
   box-shadow: 0 4px 12px rgba(0, 109, 119, 0.15);
-  transform: translateY(-2px);
 }
 
 .ct-slot-btn.ct-slot-selected {
   border-color: #006D77 !important;
-  border-width: 3px !important;
-  background: #f0f9fa !important;
-  box-shadow: 0 4px 16px rgba(0, 109, 119, 0.2),
-              inset 0 0 0 1px rgba(0, 109, 119, 0.1) !important;
-  transform: translateY(-2px);
+  border-width: 2px !important;
+  background: white !important;
+  box-shadow: 0 0 0 2px #006D77,
+              0 4px 16px rgba(0, 109, 119, 0.2) !important;
   position: relative;
 }
 
-.ct-slot-btn.ct-slot-selected::after {
+.ct-slot-btn.ct-slot-selected::before {
   content: '';
   position: absolute;
   top: 0;
   left: 0;
-  width: 4px;
+  width: 5px;
   height: 100%;
   background: #006D77;
   border-radius: 12px 0 0 12px;
+  transition: width 0.3s ease;
 }
 
 .ct-slot-btn.ct-slot-selected .ct-slot-time {
   color: #006D77 !important;
   font-weight: 800;
-  font-size: 17px;
+  transition: color 0.3s ease, font-weight 0.3s ease;
 }
 
 .ct-slot-btn.ct-slot-selected .ct-slot-price {
   color: #006D77 !important;
   font-weight: 900;
-  font-size: 20px;
+  transition: color 0.3s ease, font-weight 0.3s ease;
 }
 
 .ct-slot-btn.ct-slot-selected .ct-slot-details {
   border-top-color: rgba(0, 109, 119, 0.2);
+  transition: border-color 0.3s ease;
 }
 
 .ct-slot-btn.ct-slot-selected .ct-slot-capacity {
   color: #006D77;
   font-weight: 700;
+  transition: color 0.3s ease, font-weight 0.3s ease;
 }
 
 .ct-slot-btn.ct-slot-unavailable {
