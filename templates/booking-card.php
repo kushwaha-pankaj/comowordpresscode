@@ -148,7 +148,7 @@ if (defined('WP_DEBUG') && WP_DEBUG) {
           <input id="ct_people" type="text" value="1" readonly>
           <button type="button" class="ct-step" id="ct_people_plus">+</button>
         </div>
-        <div class="ct-people-max">Bookings available: <strong id="ct_max_display"><?php echo esc_html($max_people); ?></strong></div>
+        <div class="ct-people-max" id="ct_max_display_wrapper" style="display:none;">Max capacity: <strong id="ct_max_display">—</strong></div>
       </div>
     </div>
 

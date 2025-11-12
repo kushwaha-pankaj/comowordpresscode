@@ -412,6 +412,7 @@
       // Update max people display and limit based on slot capacity
       const slotCapacity = selectedSlot.capacity || 1;
       $maxDisplay.text(slotCapacity);
+      $('#ct_max_display_wrapper').show();
       
       // Adjust current people count if it exceeds capacity
       if (people > slotCapacity) {
@@ -502,9 +503,11 @@
       if (picker) {
         picker.clearSelection();
       }
-      // Reset max people display to original value
-      const originalMax = parseInt($card.data('max-people')) || 10;
-      $maxDisplay.text(originalMax);
+      // Hide max capacity display and reset
+      $('#ct_max_display_wrapper').hide();
+      $maxDisplay.text('—');
+      selectedSlot = null;
+      selectedDate = null;
       people = 1;
       $peopleInput.val(people);
       updateHiddenFields();
