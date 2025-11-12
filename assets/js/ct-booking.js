@@ -89,6 +89,14 @@
                 handleDateSelect(iso);
               }
             });
+            // Re-mark days when month changes
+            picker.on('view', () => {
+              setTimeout(markAvailableDays, 100);
+            });
+            // Re-mark days when calendar is rendered
+            picker.on('render', () => {
+              setTimeout(markAvailableDays, 100);
+            });
           },
           plugins: []
         });
@@ -140,7 +148,12 @@
             if (response.days) {
               availableDays = response.days;
             }
-            markAvailableDays();
+            // Mark days after a short delay to ensure calendar is rendered
+            setTimeout(function() {
+              markAvailableDays();
+              // Also try again after a longer delay in case calendar wasn't ready
+              setTimeout(markAvailableDays, 500);
+            }, 300);
             console.log('ComoTour Booking: All slots preloaded for', Object.keys(allSlotsCache).length, 'dates');
           }
         },
@@ -173,7 +186,10 @@
         success: function(response) {
           if (response && response.ok && response.days) {
             availableDays = response.days;
-            markAvailableDays();
+            setTimeout(function() {
+              markAvailableDays();
+              setTimeout(markAvailableDays, 500);
+            }, 300);
           }
         },
         error: function(xhr, status, error) {
@@ -190,33 +206,100 @@
       setTimeout(function() {
         if (!picker.calendars || picker.calendars.length === 0) {
           // Try again if calendar not ready
-          setTimeout(markAvailableDays, 200);
+          setTimeout(markAvailableDays, 300);
           return;
         }
 
-        Object.keys(availableDays).forEach(function(dateStr) {
-          // Try multiple selectors for Litepicker - check all calendars
-          for (let i = 0; i < picker.calendars.length; i++) {
-            const calendar = picker.calendars[i];
-            if (!calendar) continue;
+        // Try multiple selectors for Litepicker - check all calendars
+        for (let i = 0; i < picker.calendars.length; i++) {
+          const calendar = picker.calendars[i];
+          if (!calendar) continue;
+          
+          // Find all day items
+          const allDays = calendar.querySelectorAll('.day-item:not(.is-disabled)');
+          
+          allDays.forEach(function(dayEl) {
+            // Try to get date from Litepicker's data attributes
+            // Litepicker stores date as timestamp in data-time or similar
+            let dayTimestamp = dayEl.getAttribute('data-time') || 
+                              dayEl.getAttribute('data-timestamp') ||
+                              dayEl.getAttribute('data-date');
             
-            // Find all day items and check their date
-            const allDays = calendar.querySelectorAll('.day-item');
-            allDays.forEach(function(day) {
-              // Try different ways to get the date
-              let dayDate = day.getAttribute('data-time') || 
-                           day.getAttribute('data-day') || 
-                           day.getAttribute('data-date') ||
-                           day.getAttribute('data-lp-day');
+            if (dayTimestamp) {
+              // Convert timestamp to date string
+              const dayDate = new Date(parseInt(dayTimestamp) * 1000);
+              const dateStr = dayDate.getFullYear() + '-' + 
+                            String(dayDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                            String(dayDate.getDate()).padStart(2, '0');
               
-              // Check if this day matches our date string
-              if (dayDate === dateStr) {
-                day.classList.add('ct-day-has-slots');
+              if (availableDays[dateStr]) {
+                dayEl.classList.add('ct-day-has-slots');
               }
-            });
-          }
-        });
-      }, 400);
+            } else {
+              // Fallback: use text content and calendar month/year
+              const dayNum = parseInt(dayEl.textContent.trim());
+              if (isNaN(dayNum) || dayNum < 1 || dayNum > 31) return;
+              
+              // Try multiple ways to get month and year
+              let month = null;
+              let year = null;
+              
+              // Method 1: Try to get from picker's current view
+              if (picker && picker.calendars && picker.calendars[i]) {
+                try {
+                  const currentDate = picker.calendars[i].dateInstance || picker.calendars[i].date;
+                  if (currentDate) {
+                    month = currentDate.getMonth();
+                    year = currentDate.getFullYear();
+                  }
+                } catch(e) {}
+              }
+              
+              // Method 2: Parse from calendar header text
+              if (month === null || year === null) {
+                const headerEl = calendar.querySelector('.month-item-year') || 
+                                calendar.querySelector('.month-item') ||
+                                calendar.querySelector('[class*="month"]');
+                
+                if (headerEl) {
+                  const headerText = headerEl.textContent.trim();
+                  // Try to match "December 2025" or "12 2025" format
+                  const match = headerText.match(/(\w+|\d+)\s+(\d{4})/);
+                  if (match) {
+                    const monthPart = match[1];
+                    year = parseInt(match[2]);
+                    
+                    // Try parsing as month name first
+                    const monthNames = ['January', 'February', 'March', 'April', 'May', 'June',
+                                        'July', 'August', 'September', 'October', 'November', 'December'];
+                    month = monthNames.indexOf(monthPart);
+                    
+                    // If not found, try as number
+                    if (month < 0) {
+                      month = parseInt(monthPart);
+                      if (!isNaN(month)) {
+                        month = month - 1; // Convert to 0-based
+                      }
+                    }
+                  }
+                }
+              }
+              
+              // If we have valid month and year, check the date
+              if (month !== null && year !== null && month >= 0 && month <= 11 && !isNaN(year)) {
+                const testDate = new Date(year, month, dayNum);
+                const dateStr = testDate.getFullYear() + '-' + 
+                              String(testDate.getMonth() + 1).padStart(2, '0') + '-' + 
+                              String(testDate.getDate()).padStart(2, '0');
+                
+                if (availableDays[dateStr]) {
+                  dayEl.classList.add('ct-day-has-slots');
+                }
+              }
+            }
+          });
+        }
+      }, 600);
     }
 
     // Handle date selection
