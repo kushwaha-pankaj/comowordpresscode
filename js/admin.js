@@ -152,7 +152,8 @@ jQuery(function($){
         dateFormat: 'Y-m-d',
         altInput: true,
         altFormat: 'd/m/Y',
-        allowInput: true
+        allowInput: true,
+        minDate: 'today' // Prevent past dates
       });
     });
     $('.ct-time').each(function(){
@@ -179,27 +180,97 @@ jQuery(function($){
 
   function ucfirst(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
 
-  function renderRows(slots){
-    var $tb = $('#ct_slots_table tbody').empty();
+  var currentPage = 1;
+  var totalPages = 1;
+  var currentFilterDate = '';
+
+  function renderRows(slots, append){
+    var $tb = $('#ct_slots_table tbody');
+    if (!append) $tb.empty();
+    
     if (!slots || !slots.length){
-      $tb.append('<tr><td colspan="9">No time slots for this date.</td></tr>');
+      if (!append) {
+        $tb.append('<tr><td colspan="10">No time slots found.</td></tr>');
+      }
       return;
     }
+    
     slots.forEach(function(s){
-      var row = [
-        '<tr data-slot="'+s.id+'">',
-          '<td>'+s.date+'</td>',
-          '<td>'+ucfirst(s.mode||'private')+'</td>',
-          '<td>'+s.time+'</td>',
-          '<td>'+s.end+'</td>',
-          '<td>'+s.duration+'m</td>',
-          '<td>'+s.capacity+'</td>',
-          '<td>'+Number(s.price).toFixed(2)+'</td>',
-          '<td>'+(s.booked||0)+'</td>',
-          '<td><button class="button button-link-delete ct-del" data-id="'+s.id+'">Delete</button></td>',
-        '</tr>'
-      ].join('');
+      var row = $('<tr data-slot="'+s.id+'">');
+      row.append('<td>'+s.date+'</td>');
+      row.append('<td>'+ucfirst(s.mode||'private')+'</td>');
+      row.append('<td>'+s.time+'</td>');
+      row.append('<td>'+s.end+'</td>');
+      row.append('<td>'+s.duration+'m</td>');
+      row.append('<td>'+s.capacity+'</td>');
+      // Editable Max Bookings column
+      var capacityCell = $('<td class="ct-capacity-edit">');
+      var capacityInput = $('<input type="number" min="1" class="ct-capacity-input" value="'+s.capacity+'" data-slot-id="'+s.id+'" style="width:70px;">');
+      capacityCell.append(capacityInput);
+      row.append(capacityCell);
+      row.append('<td>'+Number(s.price).toFixed(2)+'</td>');
+      row.append('<td>'+(s.booked||0)+'</td>');
+      row.append('<td><button class="button button-link-delete ct-del" data-id="'+s.id+'">Delete</button></td>');
       $tb.append(row);
+    });
+  }
+
+  function renderPagination(page, totalPages){
+    var $pagination = $('#ct_slots_pagination');
+    if (totalPages <= 1) {
+      $pagination.hide();
+      return;
+    }
+    
+    $pagination.show();
+    var html = '<div style="display:flex;justify-content:space-between;align-items:center;">';
+    html += '<div>';
+    if (page > 1) {
+      html += '<button class="button" id="ct-prev-page">← Previous</button> ';
+    }
+    html += '<span style="margin:0 10px;">Page ' + page + ' of ' + totalPages + '</span>';
+    if (page < totalPages) {
+      html += '<button class="button" id="ct-next-page">Next →</button>';
+    }
+    html += '</div>';
+    if (page < totalPages) {
+      html += '<button class="button button-primary" id="ct-load-more">Load More</button>';
+    }
+    html += '</div>';
+    $pagination.html(html);
+  }
+
+  function loadAllSlots(page, append){
+    var filterDate = $('#ct_table_date_filter').val().trim();
+    var dateObj = filterDate ? parseDateInput(filterDate) : null;
+    var isoFilterDate = dateObj ? dateToISO(dateObj) : '';
+    
+    $.post(CT_TS_ADMIN.ajax, {
+      action:'ct_admin_get_all_slots',
+      nonce: CT_TS_ADMIN.nonce,
+      post_id: POST_ID,
+      filter_date: isoFilterDate,
+      page: page,
+      per_page: 50
+    }, function(res){
+      if(!res || !res.success){ 
+        if (!append) {
+          $('#ct_slots_table tbody').html('<tr><td colspan="10">Error loading slots.</td></tr>');
+        }
+        return; 
+      }
+      
+      currentPage = res.data.page;
+      totalPages = res.data.total_pages;
+      currentFilterDate = isoFilterDate;
+      
+      renderRows(res.data.slots || [], append);
+      renderPagination(currentPage, totalPages);
+    }, 'json').fail(function(xhr, status, err){
+      console.error('AJAX loadAllSlots failed', status, err, xhr.responseText);
+      if (!append) {
+        $('#ct_slots_table tbody').html('<tr><td colspan="10">Error loading slots. See console (F12) for details.</td></tr>');
+      }
     });
   }
 
@@ -357,27 +428,15 @@ jQuery(function($){
         console.log('Server resolved capacity_used =', res.data.capacity_used);
       }
       var serverMsg = (res.data && res.data.message) ? res.data.message : '';
-      if (serverMsg && dateList.length === 1) {
+      if (serverMsg) {
         toast(serverMsg);
+      } else if (dateList.length > 1) {
+        toast('Created ' + dateList.length + ' slots across the selected range.');
       }
       $('#ct_p_start,#ct_p_end,#ct_p_capacity,#ct_p_price,#ct_p_promo,#ct_p_disc').val('');
-      if (dateList.length === 1) {
-        fetchSlotsFor(targetDate);
-      } else {
-        var rangeMsg = serverMsg || ('Created '+dateList.length+' slots across the selected range.');
-        toast(rangeMsg);
-        if (res.data && res.data.appliedDates && res.data.appliedDates.length) {
-          var options = res.data.appliedDates.map(function(d){
-            return '<option value="'+d+'">'+d+'</option>';
-          }).join('');
-          $('#ct_slots_table tbody').html(
-            '<tr><td colspan="9">'+rangeMsg+'<br><label>Review slots:&nbsp;<select id="ct_slot_range_select"><option value="">Select a date…</option>'+options+'</select></label></td></tr>'
-          );
-        } else {
-          $('#ct_slots_table tbody').html('<tr><td colspan="9">'+rangeMsg+' Pick a specific date to review them.</td></tr>');
-        }
-        setDateLabel('');
-      }
+      // Reload all slots after adding
+      currentPage = 1;
+      loadAllSlots(1, false);
     }, 'json').fail(function(xhr){
       console.error('AJAX addPrivateSlot failed', xhr.responseText);
       toast('AJAX error adding slot. See console (F12) for details.');
@@ -424,7 +483,9 @@ jQuery(function($){
         console.log('Server resolved capacity_used =', res.data.capacity_used);
       }
       $('#ct_s_start,#ct_s_end,#ct_s_capacity,#ct_s_price').val('');
-      fetchSlotsFor(date);
+      // Reload all slots after adding
+      currentPage = 1;
+      loadAllSlots(1, false);
     }, 'json').fail(function(xhr){
       console.error('AJAX addSharedSlot failed', xhr.responseText);
       toast('AJAX error adding slot. See console (F12) for details.');
@@ -432,7 +493,6 @@ jQuery(function($){
   }
 
   function deleteSlot(id){
-    var date = $('#ct_specific_date').val();
     $.post(CT_TS_ADMIN.ajax, {
       action:'ct_admin_delete_slot',
       nonce: CT_TS_ADMIN.nonce,
@@ -446,14 +506,15 @@ jQuery(function($){
         toast(msg);
         return;
       }
-      fetchSlotsFor(date);
+      // Reload all slots after deleting
+      loadAllSlots(currentPage, false);
     }, 'json').fail(function(xhr){
       console.error('AJAX delete failed', xhr.responseText);
       toast('AJAX error deleting slot. See console (F12) for details.');
     });
   }
 
-  // When the specific date (or range inputs) change we validate and fetch
+  // When the specific date (or range inputs) change we validate
   $('#ct_specific_date, #ct_date_from, #ct_date_to').on('change', function(){
     var specific = currentSpecificDate();
     if (specific){
@@ -461,14 +522,12 @@ jQuery(function($){
       if(!validation.ok){
         setAddDisabled(true);
         setDateLabel('');
-        $('#ct_slots_table tbody').html('<tr><td colspan="9">'+validation.msg+'</td></tr>');
         return;
       }
       var specDate = parseDateInput(specific);
       var iso = specDate ? dateToISO(specDate) : specific;
       $('#ct_specific_date').val(iso);
       setAddDisabled(false);
-      fetchSlotsFor(iso);
       return;
     }
 
@@ -478,10 +537,103 @@ jQuery(function($){
   $('#ct_clear_specific_date').on('click', function(e){
     e.preventDefault();
     $('#ct_specific_date').val('');
-    $('#ct_slots_table tbody').html('<tr><td colspan="9">Pick a date to load time slots…</td></tr>');
+    // Clear the flatpickr instance if it exists
+    var fp = $('#ct_specific_date')[0]._flatpickr;
+    if (fp) {
+      fp.clear();
+    }
     setDateLabel('');
     setAddDisabled(true);
     updateAddState();
+  });
+
+  // Table date filter
+  $('#ct_table_date_filter').on('change', function(){
+    currentPage = 1;
+    loadAllSlots(1, false);
+  });
+
+  $('#ct_clear_table_filter').on('click', function(e){
+    e.preventDefault();
+    $('#ct_table_date_filter').val('');
+    var fp = $('#ct_table_date_filter')[0]._flatpickr;
+    if (fp) {
+      fp.clear();
+    }
+    currentPage = 1;
+    loadAllSlots(1, false);
+  });
+
+  // Pagination handlers
+  $(document).on('click', '#ct-prev-page', function(e){
+    e.preventDefault();
+    if (currentPage > 1) {
+      loadAllSlots(currentPage - 1, false);
+    }
+  });
+
+  $(document).on('click', '#ct-next-page', function(e){
+    e.preventDefault();
+    if (currentPage < totalPages) {
+      loadAllSlots(currentPage + 1, false);
+    }
+  });
+
+  $(document).on('click', '#ct-load-more', function(e){
+    e.preventDefault();
+    if (currentPage < totalPages) {
+      loadAllSlots(currentPage + 1, true); // Append mode
+    }
+  });
+
+  // Editable capacity
+  $(document).on('blur', '.ct-capacity-input', function(){
+    var $input = $(this);
+    var slotId = parseInt($input.data('slot-id'), 10);
+    var newCapacity = parseInt($input.val(), 10);
+    var oldCapacity = parseInt($input.attr('data-original-value') || $input.val(), 10);
+    
+    if (isNaN(newCapacity) || newCapacity < 1) {
+      $input.val(oldCapacity);
+      toast('Capacity must be at least 1.');
+      return;
+    }
+    
+    if (newCapacity === oldCapacity) {
+      return; // No change
+    }
+    
+    $input.prop('disabled', true);
+    
+    $.post(CT_TS_ADMIN.ajax, {
+      action: 'ct_admin_update_slot_capacity',
+      nonce: CT_TS_ADMIN.nonce,
+      post_id: POST_ID,
+      slot_id: slotId,
+      capacity: newCapacity
+    }, function(res){
+      $input.prop('disabled', false);
+      if (res && res.success) {
+        $input.attr('data-original-value', newCapacity);
+        // Update the capacity column too
+        $input.closest('tr').find('td:eq(5)').text(newCapacity);
+        toast('Capacity updated successfully.');
+      } else {
+        $input.val(oldCapacity);
+        var msg = (res && res.data && res.data.msg) ? res.data.msg : 'Error updating capacity.';
+        toast(msg);
+      }
+    }, 'json').fail(function(){
+      $input.prop('disabled', false);
+      $input.val(oldCapacity);
+      toast('Error updating capacity. Please try again.');
+    });
+  });
+
+  $(document).on('keypress', '.ct-capacity-input', function(e){
+    if (e.which === 13) { // Enter key
+      $(this).blur();
+    }
   });
 
   $('#ct-add-p-slot').on('click', function(e){
@@ -503,26 +655,20 @@ jQuery(function($){
     }
   });
 
-  $('#ct_slots_table').on('change', '#ct_slot_range_select', function(){
-    var selected = $(this).val();
-    if (!selected) return;
-    $('#ct_specific_date').val(selected);
-    updateAddState({updateTable:false});
-    fetchSlotsFor(selected);
-  });
-
-  // initial load
-  var pre = currentSpecificDate();
-  if (pre) {
-    var v = validateSpecificDate(pre);
-    if(v.ok) {
-      var iso = dateToISO(parseDateInput(pre));
-      fetchSlotsFor(iso || pre);
-    } else {
-      $('#ct_slots_table tbody').html('<tr><td colspan="9">'+v.msg+'</td></tr>');
-      setAddDisabled(true);
+  // Initial load - load all slots
+  loadAllSlots(1, false);
+  
+  // Also initialize the table date filter picker
+  setTimeout(function(){
+    if ($('#ct_table_date_filter').length && !$('#ct_table_date_filter')[0]._fp) {
+      $('#ct_table_date_filter').flatpickr({
+        dateFormat: 'Y-m-d',
+        altInput: true,
+        altFormat: 'd/m/Y',
+        allowInput: true,
+        minDate: 'today'
+      });
+      $('#ct_table_date_filter')[0]._fp = true;
     }
-  } else {
-    updateAddState();
-  }
+  }, 100);
 });

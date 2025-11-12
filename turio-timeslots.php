@@ -27,8 +27,10 @@ final class CT_Turio_Timeslots {
     add_action('save_post', [$this, 'save_meta'], 10, 1);
     add_action('admin_enqueue_scripts', [$this, 'admin_assets']);
     add_action('wp_ajax_ct_admin_get_slots_by_date', [$this, 'ajax_admin_get_slots_by_date']);
+    add_action('wp_ajax_ct_admin_get_all_slots', [$this, 'ajax_admin_get_all_slots']);
     add_action('wp_ajax_ct_admin_add_slot', [$this, 'ajax_admin_add_slot']);
     add_action('wp_ajax_ct_admin_delete_slot', [$this, 'ajax_admin_delete_slot']);
+    add_action('wp_ajax_ct_admin_update_slot_capacity', [$this, 'ajax_admin_update_slot_capacity']);
   }
 
   public function activate() {
@@ -139,11 +141,19 @@ final class CT_Turio_Timeslots {
     echo '</div>';
 
     echo '<hr class="ct-hr"/>';
-    echo '<h3>Time Slots for <span id="ct_date_label">[pick a date]</span></h3>';
+    echo '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;">';
+    echo '<h3 style="margin:0;">Time Slots</h3>';
+    echo '<div style="display:flex;align-items:center;gap:8px;">';
+    echo '<label style="margin:0;font-weight:600;">Filter by date:</label>';
+    echo '<input type="text" class="ct-date" id="ct_table_date_filter" value="" placeholder="YYYY-MM-DD" autocomplete="off" style="width:150px;">';
+    echo '<button type="button" class="button" id="ct_clear_table_filter" style="white-space:nowrap;">Clear Filter</button>';
+    echo '</div>';
+    echo '</div>';
     echo '<table class="widefat fixed striped" id="ct_slots_table">';
-    echo '<thead><tr><th>Date</th><th>Type</th><th>Start</th><th>End</th><th>Duration</th><th>Capacity</th><th>Price (€)</th><th>Booked</th><th>Actions</th></tr></thead>';
-    echo '<tbody><tr><td colspan="9">Pick a date to load time slots…</td></tr></tbody>';
+    echo '<thead><tr><th>Date</th><th>Type</th><th>Start</th><th>End</th><th>Duration</th><th>Capacity</th><th>Max Bookings</th><th>Price (€)</th><th>Booked</th><th>Actions</th></tr></thead>';
+    echo '<tbody><tr><td colspan="10">Loading time slots…</td></tr></tbody>';
     echo '</table>';
+    echo '<div id="ct_slots_pagination" style="margin-top:10px;display:none;"></div>';
   }
 
   public function save_meta($post_id) {
@@ -450,6 +460,199 @@ final class CT_Turio_Timeslots {
     wp_send_json_success(['date' => $dates[0] ?? $date, 'slots' => $slots]);
   }
 
+  public function ajax_admin_get_all_slots() {
+    check_ajax_referer('ct_ts_admin_nonce', 'nonce');
+
+    $post_id = absint($_POST['post_id'] ?? 0);
+    $filter_date = $this->norm_date(sanitize_text_field($_POST['filter_date'] ?? ''));
+    $page = absint($_POST['page'] ?? 1);
+    $per_page = absint($_POST['per_page'] ?? 50);
+    $offset = ($page - 1) * $per_page;
+
+    $is_unsaved = ($post_id === 0);
+    
+    if (!$is_unsaved && !current_user_can('edit_post', $post_id)) {
+      wp_send_json_error(['msg'=>'No permission.']);
+    }
+
+    $slots = [];
+    $total = 0;
+
+    if ($is_unsaved) {
+      // Read from user-specific transient
+      $user_id = get_current_user_id();
+      $meta_key = '_ct_timeslots_temp_' . $user_id;
+      $temp_slots = get_transient($meta_key);
+      if ($temp_slots === false) {
+        $temp_slots = [];
+      }
+      
+      foreach ($temp_slots as $slot_key => $slot_data) {
+        if ($filter_date && $slot_data['date'] !== $filter_date) {
+          continue;
+        }
+        
+        $start_time = $slot_data['time'];
+        $duration = intval($slot_data['duration']);
+        [$sh,$sm] = array_map('intval', explode(':', $start_time));
+        $end_minutes = ($sh * 60 + $sm + $duration);
+        
+        if ($end_minutes >= 24 * 60) {
+          $end_minutes = $end_minutes % (24*60);
+        }
+        
+        $eh = floor($end_minutes / 60);
+        $em = $end_minutes % 60;
+        $end_time = sprintf('%02d:%02d', $eh, $em);
+        
+        $slots[] = [
+          'id' => -abs(crc32($slot_key)),
+          'date' => $slot_data['date'],
+          'mode' => $slot_data['mode'] ?? 'private',
+          'time' => $start_time,
+          'end' => $end_time,
+          'duration' => $duration,
+          'capacity' => intval($slot_data['capacity']),
+          'price' => (float)$slot_data['price'],
+          'booked' => intval($slot_data['booked']),
+          '_temp_key' => $slot_key
+        ];
+      }
+      
+      $total = count($slots);
+      // Sort by date, then time
+      usort($slots, function($a, $b) {
+        $dateCmp = strcmp($a['date'], $b['date']);
+        return $dateCmp !== 0 ? $dateCmp : strcmp($a['time'], $b['time']);
+      });
+      $slots = array_slice($slots, $offset, $per_page);
+    } else {
+      // Read from database
+      if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
+
+      $where = "`tour_id`=%d";
+      $params = [$post_id];
+      
+      if ($filter_date) {
+        $where .= " AND `date`=%s";
+        $params[] = $filter_date;
+      }
+
+      // Get total count
+      $total = $this->db()->get_var($this->db()->prepare(
+        "SELECT COUNT(*) FROM `{$this->db_table()}` WHERE {$where}",
+        ...$params
+      ));
+
+      // Get paginated results
+      $rows = $this->db()->get_results($this->db()->prepare(
+        "SELECT `id`, `date`, `time`, `duration`, `capacity`, `price`, `booked`, `mode`
+         FROM `{$this->db_table()}`
+         WHERE {$where}
+         ORDER BY `date` ASC, `time` ASC
+         LIMIT %d OFFSET %d",
+        ...array_merge($params, [$per_page, $offset])
+      ), ARRAY_A);
+
+      foreach ($rows as $r) {
+        $start_time = $r['time'];
+        $duration = intval($r['duration']);
+        [$sh,$sm] = array_map('intval', explode(':', $start_time));
+        $end_minutes = ($sh * 60 + $sm + $duration);
+        
+        if ($end_minutes >= 24 * 60) {
+          $end_minutes = $end_minutes % (24*60);
+        }
+        
+        $eh = floor($end_minutes / 60);
+        $em = $end_minutes % 60;
+        $end_time = sprintf('%02d:%02d', $eh, $em);
+
+        $slots[] = [
+          'id' => intval($r['id']),
+          'date' => $r['date'],
+          'mode' => $r['mode'] ?? 'private',
+          'time' => $start_time,
+          'end' => $end_time,
+          'duration' => $duration,
+          'capacity' => intval($r['capacity']),
+          'price' => (float)$r['price'],
+          'booked' => intval($r['booked']),
+        ];
+      }
+    }
+
+    wp_send_json_success([
+      'slots' => $slots,
+      'total' => $total,
+      'page' => $page,
+      'per_page' => $per_page,
+      'total_pages' => ceil($total / $per_page)
+    ]);
+  }
+
+  public function ajax_admin_update_slot_capacity() {
+    check_ajax_referer('ct_ts_admin_nonce', 'nonce');
+
+    $post_id = absint($_POST['post_id'] ?? 0);
+    $slot_id = absint($_POST['slot_id'] ?? 0);
+    $capacity = absint($_POST['capacity'] ?? 0);
+
+    $is_unsaved = ($post_id === 0);
+    
+    if (!$slot_id || $capacity < 1) {
+      wp_send_json_error(['msg'=>'Invalid slot ID or capacity.']);
+    }
+    
+    if (!$is_unsaved && !current_user_can('edit_post', $post_id)) {
+      wp_send_json_error(['msg'=>'No permission.']);
+    }
+
+    if ($is_unsaved) {
+      // Update in transient
+      $user_id = get_current_user_id();
+      $meta_key = '_ct_timeslots_temp_' . $user_id;
+      $temp_slots = get_transient($meta_key);
+      if ($temp_slots === false) {
+        wp_send_json_error(['msg'=>'Slot not found.']);
+      }
+      
+      $found = false;
+      foreach ($temp_slots as $key => $slot_data) {
+        $temp_id = -abs(crc32($key));
+        if ($temp_id == $slot_id) {
+          $temp_slots[$key]['capacity'] = $capacity;
+          $found = true;
+          break;
+        }
+      }
+      
+      if ($found) {
+        set_transient($meta_key, $temp_slots, DAY_IN_SECONDS);
+        wp_send_json_success(['ok' => true, 'capacity' => $capacity]);
+      } else {
+        wp_send_json_error(['msg'=>'Slot not found in temporary storage.']);
+      }
+    } else {
+      // Update in database
+      if (!$this->ensure_table_exists()) wp_send_json_error(['msg'=>'DB table missing.']);
+
+      $updated = $this->db()->update(
+        $this->db_table(),
+        ['capacity' => $capacity],
+        ['id' => $slot_id, 'tour_id' => $post_id],
+        ['%d'],
+        ['%d', '%d']
+      );
+
+      if ($updated === false) {
+        wp_send_json_error(['msg' => 'DB error updating capacity.']);
+      }
+
+      wp_send_json_success(['ok' => true, 'capacity' => $capacity]);
+    }
+  }
+
   public function ajax_admin_add_slot() {
     check_ajax_referer('ct_ts_admin_nonce', 'nonce');
 
@@ -480,6 +683,13 @@ final class CT_Turio_Timeslots {
       foreach ($date_list_raw as $candidate) {
         $normalized = $this->norm_date(sanitize_text_field($candidate));
         if ($normalized) {
+          // Validate date is not in the past
+          $date_obj = DateTime::createFromFormat('Y-m-d', $normalized);
+          $today = new DateTime();
+          $today->setTime(0, 0, 0);
+          if ($date_obj && $date_obj < $today) {
+            wp_send_json_error(['msg' => 'Cannot add time slots for past dates. Selected date: ' . $normalized]);
+          }
           $dates[] = $normalized;
         }
       }
@@ -487,6 +697,13 @@ final class CT_Turio_Timeslots {
 
     if (empty($dates)) {
       if ($date) {
+        // Validate date is not in the past
+        $date_obj = DateTime::createFromFormat('Y-m-d', $date);
+        $today = new DateTime();
+        $today->setTime(0, 0, 0);
+        if ($date_obj && $date_obj < $today) {
+          wp_send_json_error(['msg' => 'Cannot add time slots for past dates. Selected date: ' . $date]);
+        }
         $dates[] = $date;
       } else {
         wp_send_json_error(['msg'=>'Select a specific date or provide a valid date range.']);
