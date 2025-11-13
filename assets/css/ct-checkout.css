@@ -262,26 +262,55 @@
 }
 
 .woocommerce-checkout #payment ul.payment_methods li label img {
-  max-height: 24px;
-  width: auto;
-  vertical-align: middle;
-  margin-left: 8px;
+  display: none;
+}
+
+/* Show payment method icons as background or inline */
+.woocommerce-checkout #payment ul.payment_methods li label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.woocommerce-checkout #payment ul.payment_methods li label::before {
+  content: '💳';
+  font-size: 20px;
+  flex-shrink: 0;
 }
 
 .woocommerce-checkout #payment .payment_box {
-  margin-top: 16px;
-  padding: 18px;
+  margin-top: 18px;
+  padding: 24px;
   background: #f8fafb;
   border: 2px solid #e8ecf1;
-  border-radius: 10px;
+  border-radius: 12px;
   font-size: 14px;
   line-height: 1.6;
   color: #4a5568;
   box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
+  display: none;
+}
+
+.woocommerce-checkout #payment ul.payment_methods li.wc_payment_method:has(input[type="radio"]:checked) .payment_box {
+  display: block;
+  animation: slideDown 0.3s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .woocommerce-checkout #payment .payment_box p {
-  margin: 0 0 12px 0;
+  margin: 0 0 14px 0;
+  font-size: 13px;
+  color: #718096;
 }
 
 .woocommerce-checkout #payment .payment_box p:last-child {
@@ -296,20 +325,41 @@
 .woocommerce-checkout #payment .payment_box input.input-text,
 .woocommerce-checkout #payment .payment_box select {
   border: 2px solid #e8ecf1;
-  border-radius: 8px;
-  padding: 10px 14px;
+  border-radius: 10px;
+  padding: 12px 16px;
   font-size: 14px;
   background: #ffffff;
   transition: all 0.3s ease;
   width: 100%;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
+  font-weight: 500;
+  color: #2d3748;
 }
 
 .woocommerce-checkout #payment .payment_box input.input-text:focus,
 .woocommerce-checkout #payment .payment_box select:focus {
   outline: none;
   border-color: #006D77;
-  box-shadow: 0 0 0 3px rgba(0, 109, 119, 0.1);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 109, 119, 0.1);
+  transform: translateY(-1px);
+}
+
+.woocommerce-checkout #payment .payment_box label {
+  font-weight: 600;
+  color: #4a5568;
+  font-size: 13px;
+  margin-bottom: 8px;
+  display: block;
+}
+
+/* Card form layout */
+.woocommerce-checkout #payment .payment_box .form-row {
+  margin-bottom: 16px;
+}
+
+.woocommerce-checkout #payment .payment_box .form-row:last-child {
+  margin-bottom: 0;
 }
 
 /* Place Order Button - Premium Design */
@@ -665,196 +715,90 @@
   box-shadow: 0 4px 12px rgba(0, 109, 119, 0.3);
 }
 
-/* Express Checkout / Google Pay Section - Clean Modern Design */
-.woocommerce-checkout .wc-block-components-express-payment,
-.woocommerce-checkout .wc-block-components-express-payment__content,
-.woocommerce-checkout .wc-block-components-express-payment__content-container {
+/* Hide Express Checkout from Top - Move to Payment Section */
+.woocommerce-checkout > .wc-block-components-express-payment,
+.woocommerce-checkout > form > .wc-block-components-express-payment,
+body.woocommerce-checkout .wc-block-components-express-payment:not(#payment .wc-block-components-express-payment) {
+  display: none !important;
+}
+
+/* Express Checkout / Google Pay in Payment Section */
+#payment .wc-block-components-express-payment,
+#payment .wc-block-components-express-payment__content,
+#payment .wc-block-components-express-payment__content-container {
   margin: 0;
   padding: 0;
-}
-
-/* Google Pay / Apple Pay Button Container */
-.woocommerce-checkout .wc-block-components-express-payment__content-container {
   background: transparent;
-  border-radius: 0;
-  padding: 0;
-  box-shadow: none;
   border: none;
-  margin-bottom: 0;
+  box-shadow: none;
 }
 
-.woocommerce-checkout .wc-block-components-express-payment__content-container .wc-block-components-express-payment__content {
+/* Google Pay as Payment Option */
+#payment .wc-block-components-express-payment__content-container {
+  display: block !important;
+}
+
+#payment .wc-block-components-express-payment__content-container .wc-block-components-express-payment__content {
   display: flex;
   flex-direction: column;
-  gap: 0;
+  gap: 12px;
 }
 
-/* Google Pay Button Styling - Official Design */
-.woocommerce-checkout .wc-block-components-express-payment__content-container button,
-.woocommerce-checkout .wc-block-components-express-payment__content-container .wc-block-components-express-payment__content button {
+/* Google Pay Button in Payment List */
+#payment .wc-block-components-express-payment__content-container button,
+#payment [id*="express-checkout"] button,
+#payment [class*="express-checkout"] button {
   width: 100%;
-  padding: 0;
-  border-radius: 4px;
-  font-weight: 500;
-  font-size: 14px;
-  border: none;
-  background: #000000;
-  color: #ffffff;
-  transition: all 0.2s ease;
+  padding: 18px 20px;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 15px;
+  border: 2px solid #e8ecf1;
+  background: #ffffff;
+  color: #2d3748;
+  transition: all 0.3s ease;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  box-shadow: none;
+  gap: 10px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
   cursor: pointer;
   text-transform: none;
-  letter-spacing: 0;
-  height: 48px;
-  min-height: 48px;
+  letter-spacing: -0.2px;
+  height: auto;
+  min-height: 56px;
 }
 
-.woocommerce-checkout .wc-block-components-express-payment__content-container button:hover {
-  background: #3c4043;
-  box-shadow: none;
-  transform: none;
+#payment .wc-block-components-express-payment__content-container button:hover,
+#payment [id*="express-checkout"] button:hover,
+#payment [class*="express-checkout"] button:hover {
+  border-color: #006D77;
+  box-shadow: 0 4px 12px rgba(0, 109, 119, 0.08);
+  transform: translateY(-1px);
+  background: #ffffff;
 }
 
-/* Google Pay specific styling - Official Google Design */
-.woocommerce-checkout .wc-block-components-express-payment__content-container button[aria-label*="Google"],
-.woocommerce-checkout .wc-block-components-express-payment__content-container button[class*="google"],
-.woocommerce-checkout .wc-block-components-express-payment__content-container button[class*="gpay"] {
-  background: #000000;
-  color: #ffffff;
-  border: none;
-  box-shadow: none;
-  border-radius: 4px;
+/* Google Pay Icon/Logo Styling */
+#payment .wc-block-components-express-payment__content-container button::before {
+  content: '💳';
+  font-size: 20px;
 }
 
-.woocommerce-checkout .wc-block-components-express-payment__content-container button[aria-label*="Google"]:hover,
-.woocommerce-checkout .wc-block-components-express-payment__content-container button[class*="google"]:hover,
-.woocommerce-checkout .wc-block-components-express-payment__content-container button[class*="gpay"]:hover {
-  background: #3c4043;
-  box-shadow: none;
+/* Hide default express checkout sections outside payment */
+.woocommerce-checkout .wc-stripe-elements-field:not(#payment .wc-stripe-elements-field),
+.woocommerce-checkout .wc-stripe-express-checkout:not(#payment .wc-stripe-express-checkout),
+.woocommerce-checkout .stripe-express-checkout:not(#payment .stripe-express-checkout) {
+  display: none !important;
 }
 
-/* Alternative express checkout selectors */
-.woocommerce-checkout .wc-stripe-elements-field,
-.woocommerce-checkout .wc-stripe-express-checkout,
-.woocommerce-checkout .stripe-express-checkout,
-.woocommerce-checkout [id*="express-checkout"],
-.woocommerce-checkout [class*="express-checkout"] {
-  margin-bottom: 0;
-  padding: 0;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  border: none;
-}
-
-.woocommerce-checkout [id*="express-checkout"] button,
-.woocommerce-checkout [class*="express-checkout"] button {
-  width: 100%;
-  padding: 0;
-  border-radius: 4px;
-  font-weight: 500;
-  font-size: 14px;
-  border: none;
-  background: #000000;
-  color: #ffffff;
-  transition: all 0.2s ease;
-  margin-bottom: 0;
-  box-shadow: none;
-  cursor: pointer;
-  height: 48px;
-  min-height: 48px;
-}
-
-.woocommerce-checkout [id*="express-checkout"] button:hover,
-.woocommerce-checkout [class*="express-checkout"] button:hover {
-  background: #3c4043;
-  box-shadow: none;
-  transform: none;
-}
-
-/* Hide express checkout title */
-.woocommerce-checkout .wc-block-components-express-payment__title,
-.woocommerce-checkout [id*="express-checkout"]::before,
-.woocommerce-checkout [class*="express-checkout"]::before {
+/* Remove OR Separator - Not needed anymore */
+.woocommerce-checkout .wc-block-components-separator {
   display: none;
 }
 
-/* OR Separator - Clean Minimal Design */
-.woocommerce-checkout .wc-block-components-separator,
-.woocommerce-checkout-review-order-table + .woocommerce-checkout-payment {
-  position: relative;
-  margin: 35px 0;
-}
-
-.woocommerce-checkout .wc-block-components-separator::before,
-.customer_details_address + * .woocommerce-billing-fields::before {
-  content: 'OR';
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  margin: 30px 0;
-  color: #a0aec0;
-  font-size: 12px;
-  font-weight: 600;
-  position: relative;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-}
-
-.woocommerce-checkout .wc-block-components-separator::after,
-.customer_details_address + * .woocommerce-billing-fields::after {
-  content: '';
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, #e8ecf1 20%, #e8ecf1 80%, transparent);
-  z-index: 0;
-}
-
-.woocommerce-checkout .wc-block-components-separator::before {
-  background: #f5f7fa;
-  padding: 0 20px;
-  position: relative;
-  z-index: 1;
-}
-
-/* OR separator after express checkout */
-.woocommerce-checkout form.checkout > *:first-child::after {
-  content: 'OR';
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  text-align: center;
-  margin: 30px auto;
-  color: #a0aec0;
-  font-size: 12px;
-  font-weight: 600;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  position: relative;
-  max-width: 600px;
-}
-
-.woocommerce-checkout form.checkout > *:first-child {
-  position: relative;
-  padding-bottom: 30px;
-}
-
+.woocommerce-checkout form.checkout > *:first-child::after,
 .woocommerce-checkout form.checkout > *:first-child::before {
-  content: '';
-  position: absolute;
-  bottom: 15px;
-  left: 0;
-  right: 0;
-  height: 1px;
-  background: linear-gradient(to right, transparent, #e8ecf1 20%, #e8ecf1 80%, transparent);
+  display: none;
 }
 
 /* Fix layout spacing */
