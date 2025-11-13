@@ -222,6 +222,21 @@
   color: #006D77 !important;
 }
 
+/* Hide Express Checkout / Google Pay from Cart Page */
+.woocommerce-cart .wc-block-components-express-payment,
+.woocommerce-cart .wc-block-components-express-payment__content,
+.woocommerce-cart .wc-block-components-express-payment__content-container,
+.woocommerce-cart [id*="express-checkout"],
+.woocommerce-cart [class*="express-checkout"],
+.woocommerce-cart .wc-stripe-express-checkout,
+.woocommerce-cart .stripe-express-checkout {
+  display: none !important;
+}
+
+.woocommerce-cart .wc-block-components-separator {
+  display: none !important;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .ct-cart-meta-label {

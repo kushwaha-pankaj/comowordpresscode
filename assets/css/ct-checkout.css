@@ -211,6 +211,84 @@
   box-shadow: 0 4px 16px rgba(0, 109, 119, 0.12);
 }
 
+/* Custom Payment Options UI */
+.ct-payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 25px;
+}
+
+.ct-payment-option {
+  background: #ffffff;
+  border: 2px solid #e8ecf1;
+  border-radius: 12px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.ct-payment-option:hover {
+  border-color: #cbd5e0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.ct-payment-option.ct-payment-selected {
+  border-color: #006D77;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9fa 100%);
+  box-shadow: 0 4px 16px rgba(0, 109, 119, 0.12);
+}
+
+.ct-payment-option-header {
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.ct-payment-option input[type="radio"] {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  cursor: pointer;
+  accent-color: #006D77;
+  flex-shrink: 0;
+}
+
+.ct-payment-option label {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  flex: 1;
+  margin: 0;
+  font-weight: 600;
+  color: #2d3748;
+  font-size: 15px;
+  letter-spacing: -0.2px;
+}
+
+.ct-payment-icon {
+  font-size: 24px;
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f8fafb;
+  border-radius: 8px;
+}
+
+.ct-payment-selected .ct-payment-icon {
+  background: #006D77;
+  color: #ffffff;
+}
+
+.ct-payment-label {
+  flex: 1;
+}
+
 .woocommerce-checkout #payment ul.payment_methods {
   list-style: none;
   padding: 0;
@@ -279,7 +357,10 @@
 }
 
 .woocommerce-checkout #payment .payment_box {
-  margin-top: 18px;
+  margin-top: 0;
+  margin-left: 54px;
+  margin-right: 20px;
+  margin-bottom: 18px;
   padding: 24px;
   background: #f8fafb;
   border: 2px solid #e8ecf1;
@@ -291,7 +372,8 @@
   display: none;
 }
 
-.woocommerce-checkout #payment ul.payment_methods li.wc_payment_method:has(input[type="radio"]:checked) .payment_box {
+.woocommerce-checkout #payment ul.payment_methods li.wc_payment_method:has(input[type="radio"]:checked) .payment_box,
+.woocommerce-checkout #payment.ct-payment-customized ul.payment_methods li.wc_payment_method.ct-payment-selected .payment_box {
   display: block;
   animation: slideDown 0.3s ease;
 }
@@ -742,6 +824,17 @@ body.woocommerce-checkout .wc-block-components-express-payment:not(#payment .wc-
   display: flex;
   flex-direction: column;
   gap: 12px;
+}
+
+/* Google Pay Button Container when selected */
+#payment .wc-block-components-express-payment,
+#payment [id*="express-checkout"],
+#payment [class*="express-checkout"] {
+  display: none;
+  margin-top: 18px;
+  margin-left: 54px;
+  margin-right: 20px;
+  margin-bottom: 18px;
 }
 
 /* Google Pay Button in Payment List */
