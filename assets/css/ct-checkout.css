@@ -1,39 +1,58 @@
 /* ============================================================================
-   CHECKOUT PAGE STYLING - Redesigned Layout
+   CHECKOUT PAGE STYLING - Modern Premium Design
    ============================================================================ */
 
-/* Additional Information / Order Notes Section - Redesigned */
+/* Overall Checkout Page Styling */
+.woocommerce-checkout {
+  background: #f5f7fa;
+  min-height: 100vh;
+  padding: 40px 0;
+}
+
+.woocommerce-checkout .woocommerce {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+/* Page Title Styling */
+.woocommerce-checkout .entry-title,
+.woocommerce-checkout h1.page-title {
+  display: none;
+}
+
+/* Additional Information / Order Notes Section - Modern Card Design */
 .woocommerce-additional-fields {
-  margin-top: 40px;
-  padding: 0;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  border: none;
+  margin-top: 25px;
+  padding: 30px;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e8ecf1;
+  transition: box-shadow 0.3s ease;
+}
+
+.woocommerce-additional-fields:hover {
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.08);
 }
 
 .woocommerce-additional-fields h3 {
-  font-size: 20px;
+  font-size: 18px;
   font-weight: 700;
-  color: #006D77;
+  color: #1a202c;
   margin: 0 0 20px 0;
-  padding: 0;
-  border: none;
-  border-bottom: 2px solid #006D77;
-  padding-bottom: 12px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  padding: 0 0 15px 0;
+  border-bottom: 2px solid #e8ecf1;
+  text-transform: none;
+  letter-spacing: -0.3px;
   position: relative;
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
-.woocommerce-additional-fields h3::after {
-  content: '';
-  position: absolute;
-  bottom: -2px;
-  left: 0;
-  width: 60px;
-  height: 2px;
-  background: #006D77;
+.woocommerce-additional-fields h3::before {
+  content: '📝';
+  font-size: 20px;
 }
 
 .woocommerce-additional-fields .form-row {
@@ -43,8 +62,8 @@
 
 .woocommerce-additional-fields .form-row label {
   font-weight: 600;
-  color: #333;
-  margin-bottom: 12px;
+  color: #4a5568;
+  margin-bottom: 10px;
   display: block;
   font-size: 14px;
   text-transform: none;
@@ -55,7 +74,6 @@
   display: none;
 }
 
-/* Remove duplicate (optional) text if it exists */
 .woocommerce-additional-fields .form-row label::after {
   content: '';
   display: none;
@@ -63,91 +81,110 @@
 
 .woocommerce-additional-fields .form-row textarea {
   width: 100%;
-  min-height: 140px;
-  padding: 18px 20px;
-  border: 2px solid #e0e0e0;
-  border-radius: 10px;
+  min-height: 120px;
+  padding: 16px 18px;
+  border: 2px solid #e8ecf1;
+  border-radius: 12px;
   font-size: 15px;
-  line-height: 1.7;
+  line-height: 1.6;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: #ffffff;
+  background: #f8fafb;
   resize: vertical;
   font-family: inherit;
-  color: #333;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  color: #2d3748;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .woocommerce-additional-fields .form-row textarea::placeholder {
-  color: #999;
-  font-style: italic;
+  color: #a0aec0;
+  font-style: normal;
 }
 
 .woocommerce-additional-fields .form-row textarea:focus {
   outline: none;
   border-color: #006D77;
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(0, 109, 119, 0.08), 0 2px 8px rgba(0, 109, 119, 0.12);
+  box-shadow: 0 0 0 4px rgba(0, 109, 119, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
   transform: translateY(-1px);
 }
 
 .woocommerce-additional-fields .form-row textarea:hover:not(:focus) {
-  border-color: #c0c0c0;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  border-color: #cbd5e0;
+  background: #ffffff;
 }
 
-/* Optional label styling */
 .woocommerce-additional-fields .form-row .optional {
   font-weight: 400;
-  color: #999;
+  color: #a0aec0;
   font-size: 13px;
-  margin-left: 8px;
+  margin-left: 6px;
   font-style: italic;
 }
 
-/* Order Review Section - Enhanced */
+/* Order Review Section - Premium Card Design */
 #order_review {
-  background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e8e8e8;
+  background: linear-gradient(135deg, #ffffff 0%, #f8fafb 100%);
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  border: 1px solid #e8ecf1;
   padding: 35px;
   margin-bottom: 0;
   position: sticky;
   top: 20px;
+  transition: all 0.3s ease;
+}
+
+#order_review:hover {
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.12);
 }
 
 #order_review_heading {
-  font-size: 22px;
-  font-weight: 700;
-  color: #006D77;
+  font-size: 24px;
+  font-weight: 800;
+  color: #1a202c;
   margin: 0 0 25px 0;
-  padding: 0 0 15px 0;
+  padding: 0 0 20px 0;
   border-bottom: 3px solid #006D77;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  text-transform: none;
+  letter-spacing: -0.5px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
-/* Payment Section - Integrated into Order Review */
+#order_review_heading::before {
+  content: '🛒';
+  font-size: 28px;
+}
+
+/* Payment Section - Modern Design */
 .woocommerce-checkout #payment {
-  background: #f8f9fa;
-  border-radius: 12px;
-  padding: 25px;
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 28px;
   margin-top: 30px;
-  border: 1px solid #e8e8e8;
+  border: 2px solid #e8ecf1;
   position: relative;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.woocommerce-checkout #payment:hover {
+  border-color: #006D77;
+  box-shadow: 0 4px 20px rgba(0, 109, 119, 0.08);
 }
 
 .woocommerce-checkout #payment::before {
-  content: 'Payment Method';
+  content: '💳 Payment Method';
   display: block;
-  font-size: 18px;
+  font-size: 17px;
   font-weight: 700;
-  color: #006D77;
+  color: #1a202c;
   margin-bottom: 20px;
-  padding-bottom: 12px;
-  border-bottom: 2px solid #e8e8e8;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  padding-bottom: 15px;
+  border-bottom: 2px solid #e8ecf1;
+  text-transform: none;
+  letter-spacing: -0.3px;
 }
 
 /* Ensure payment section appears inside order review */
@@ -222,29 +259,41 @@
   display: none;
 }
 
-/* Place Order Button */
+/* Place Order Button - Premium Design */
 .woocommerce-checkout #payment #place_order {
   width: 100%;
-  background-color: #006D77 !important;
-  border-color: #006D77 !important;
+  background: linear-gradient(135deg, #006D77 0%, #005a63 100%) !important;
+  border: none !important;
   color: #fff !important;
-  padding: 16px 28px !important;
-  font-size: 18px !important;
+  padding: 18px 32px !important;
+  font-size: 17px !important;
   font-weight: 700 !important;
-  border-radius: 8px !important;
+  border-radius: 14px !important;
   text-transform: uppercase !important;
-  letter-spacing: 0.5px !important;
-  transition: all 0.3s ease !important;
-  box-shadow: 0 2px 8px rgba(0, 109, 119, 0.2) !important;
-  margin-top: 20px !important;
+  letter-spacing: 1px !important;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+  box-shadow: 0 4px 16px rgba(0, 109, 119, 0.3) !important;
+  margin-top: 24px !important;
   height: auto !important;
+  cursor: pointer !important;
+  position: relative !important;
+  overflow: hidden !important;
+}
+
+.woocommerce-checkout #payment #place_order::before {
+  content: '🔒';
+  margin-right: 8px;
+  font-size: 16px;
 }
 
 .woocommerce-checkout #payment #place_order:hover {
-  background-color: #005a63 !important;
-  border-color: #005a63 !important;
-  box-shadow: 0 4px 12px rgba(0, 109, 119, 0.3) !important;
-  transform: translateY(-2px) !important;
+  background: linear-gradient(135deg, #005a63 0%, #004a52 100%) !important;
+  box-shadow: 0 6px 24px rgba(0, 109, 119, 0.4) !important;
+  transform: translateY(-2px) scale(1.01) !important;
+}
+
+.woocommerce-checkout #payment #place_order:active {
+  transform: translateY(0) scale(0.99) !important;
 }
 
 /* Terms and Conditions */
@@ -272,32 +321,50 @@
   accent-color: #ffc107;
 }
 
-/* Customer Details Section - Enhanced */
+/* Customer Details Section - Modern Card Design */
 .customer_details_address {
   background: #ffffff;
-  border-radius: 12px;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
-  border: 1px solid #e8e8e8;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+  border: 1px solid #e8ecf1;
   padding: 40px;
-  margin-bottom: 30px;
+  margin-bottom: 25px;
+  transition: box-shadow 0.3s ease;
+}
+
+.customer_details_address:hover {
+  box-shadow: 0 6px 30px rgba(0, 0, 0, 0.08);
 }
 
 .woocommerce-billing-fields h3,
 .woocommerce-shipping-fields h3 {
-  font-size: 22px;
+  font-size: 20px;
   font-weight: 700;
-  color: #006D77;
+  color: #1a202c;
   margin: 0 0 25px 0;
-  padding: 0 0 15px 0;
-  border-bottom: 3px solid #006D77;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  padding: 0 0 18px 0;
+  border-bottom: 2px solid #e8ecf1;
+  text-transform: none;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.woocommerce-billing-fields h3::before {
+  content: '👤';
+  font-size: 22px;
+}
+
+.woocommerce-shipping-fields h3::before {
+  content: '📦';
+  font-size: 22px;
 }
 
 /* Ensure proper spacing for form sections */
 .woocommerce-billing-fields,
 .woocommerce-shipping-fields {
-  margin-bottom: 30px;
+  margin-bottom: 35px;
 }
 
 .woocommerce-billing-fields:last-child,
@@ -305,24 +372,27 @@
   margin-bottom: 0;
 }
 
-/* Form Fields - Enhanced */
+/* Form Fields - Modern Premium Design */
 .woocommerce-checkout .woocommerce form .form-row {
-  margin-bottom: 20px;
+  margin-bottom: 22px;
 }
 
 .woocommerce-checkout .woocommerce form .form-row input.input-text,
 .woocommerce-checkout .woocommerce form .form-row textarea,
 .woocommerce-checkout .woocommerce form .form-row select,
 .woocommerce-checkout .select2-container--default .select2-selection--single {
-  border: 2px solid #e8e8e8;
-  border-radius: 8px;
-  padding: 12px 16px;
+  border: 2px solid #e8ecf1;
+  border-radius: 12px;
+  padding: 14px 18px;
   font-size: 15px;
-  transition: all 0.3s ease;
-  background: #fafafa;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: #f8fafb;
   width: 100%;
-  height: 48px;
+  height: 52px;
   line-height: 24px;
+  color: #2d3748;
+  font-weight: 500;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .woocommerce-checkout .woocommerce form .form-row textarea {
@@ -337,33 +407,43 @@
   outline: none;
   border-color: #006D77;
   background: #ffffff;
-  box-shadow: 0 0 0 3px rgba(0, 109, 119, 0.1);
+  box-shadow: 0 0 0 4px rgba(0, 109, 119, 0.1), 0 1px 3px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.woocommerce-checkout .woocommerce form .form-row input.input-text:hover:not(:focus),
+.woocommerce-checkout .woocommerce form .form-row select:hover:not(:focus) {
+  border-color: #cbd5e0;
+  background: #ffffff;
 }
 
 .woocommerce-checkout .woocommerce form .form-row label {
   font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
+  color: #4a5568;
+  margin-bottom: 10px;
   font-size: 14px;
   display: block;
+  letter-spacing: -0.2px;
 }
 
 .woocommerce-checkout .woocommerce form .form-row label .required {
-  color: #e74c3c;
-  margin-left: 3px;
+  color: #f56565;
+  margin-left: 4px;
+  font-weight: 700;
 }
 
 /* Fix select2 dropdown styling */
 .woocommerce-checkout .select2-container--default .select2-selection--single .select2-selection__rendered {
   line-height: 24px;
   padding: 0;
-  color: #333;
+  color: #2d3748;
+  font-weight: 500;
 }
 
 .woocommerce-checkout .select2-container--default .select2-selection--single .select2-selection__arrow {
-  height: 46px;
+  height: 50px;
   top: 1px;
-  right: 8px;
+  right: 12px;
 }
 
 /* Fix form row widths */
@@ -382,115 +462,154 @@
   clear: both;
 }
 
-/* Order Review Table */
+/* Order Review Table - Modern Design */
 .woocommerce-checkout-review-order table.shop_table {
   border: none;
   margin-bottom: 0;
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 
 .woocommerce-checkout-review-order table.shop_table th,
 .woocommerce-checkout-review-order table.shop_table td {
-  padding: 15px 0;
-  border-bottom: 1px solid #e8e8e8;
+  padding: 18px 0;
+  border-bottom: 1px solid #e8ecf1;
   font-size: 15px;
   text-align: left;
-  vertical-align: top;
+  vertical-align: middle;
 }
 
 .woocommerce-checkout-review-order table.shop_table th {
   font-weight: 600;
-  color: #333;
+  color: #4a5568;
   width: 60%;
+  letter-spacing: -0.2px;
 }
 
 .woocommerce-checkout-review-order table.shop_table td {
   text-align: right;
   width: 40%;
-  font-weight: 500;
+  font-weight: 600;
+  color: #2d3748;
 }
 
 .woocommerce-checkout-review-order table.shop_table .cart-subtotal th,
 .woocommerce-checkout-review-order table.shop_table .cart-subtotal td {
-  padding-top: 15px;
+  padding-top: 18px;
+  font-size: 16px;
+}
+
+.woocommerce-checkout-review-order table.shop_table .order-total {
+  background: linear-gradient(135deg, #f0f9fa 0%, #e6f4f5 100%);
+  border-radius: 12px;
 }
 
 .woocommerce-checkout-review-order table.shop_table .order-total th,
 .woocommerce-checkout-review-order table.shop_table .order-total td {
   border-bottom: none;
-  padding-top: 20px;
-  font-size: 20px;
-  font-weight: 700;
+  padding: 20px 18px;
+  font-size: 22px;
+  font-weight: 800;
   color: #006D77;
+  letter-spacing: -0.5px;
+}
+
+.woocommerce-checkout-review-order table.shop_table .order-total th::before {
+  content: '💰';
+  margin-right: 8px;
+  font-size: 20px;
 }
 
 /* Product name and quantity */
 .woocommerce-checkout-review-order table.shop_table .product-name {
   font-weight: 600;
+  color: #2d3748;
 }
 
 .woocommerce-checkout-review-order table.shop_table .product-total {
-  font-weight: 600;
+  font-weight: 700;
   color: #006D77;
+  font-size: 16px;
 }
 
-/* Coupon Section - Styled */
+/* Coupon Section - Modern Card Design */
 .woocommerce form.checkout_coupon {
   max-width: 100%;
-  margin: 0 0 30px 0;
-  padding: 20px;
-  background: #f8f9fa;
-  border-radius: 10px;
-  border: 2px solid #e8e8e8;
+  margin: 0 0 25px 0;
+  padding: 25px;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 2px solid #e8ecf1;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
+  transition: all 0.3s ease;
+}
+
+.woocommerce form.checkout_coupon:hover {
+  border-color: #006D77;
+  box-shadow: 0 4px 20px rgba(0, 109, 119, 0.08);
 }
 
 .woocommerce form.checkout_coupon p {
-  margin: 0 0 15px 0;
-  font-weight: 600;
-  color: #333;
-  font-size: 15px;
+  margin: 0 0 16px 0;
+  font-weight: 700;
+  color: #1a202c;
+  font-size: 16px;
+  letter-spacing: -0.3px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.woocommerce form.checkout_coupon p::before {
+  content: '🎟️';
+  font-size: 18px;
 }
 
 .woocommerce form.checkout_coupon .form-row {
   display: flex;
-  gap: 10px;
+  gap: 12px;
   margin: 0;
 }
 
 .woocommerce form.checkout_coupon input.input-text {
   flex: 1;
-  padding: 12px 16px;
-  border: 2px solid #e8e8e8;
-  border-radius: 8px;
+  padding: 14px 18px;
+  border: 2px solid #e8ecf1;
+  border-radius: 12px;
   font-size: 15px;
-  background: #ffffff;
+  background: #f8fafb;
   transition: all 0.3s ease;
+  font-weight: 500;
+  color: #2d3748;
 }
 
 .woocommerce form.checkout_coupon input.input-text:focus {
   outline: none;
   border-color: #006D77;
-  box-shadow: 0 0 0 3px rgba(0, 109, 119, 0.1);
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(0, 109, 119, 0.1);
+  transform: translateY(-1px);
 }
 
 .woocommerce form.checkout_coupon button.button {
-  padding: 12px 24px;
-  background: #006D77;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #006D77 0%, #005a63 100%);
   color: #fff;
   border: none;
-  border-radius: 8px;
-  font-weight: 600;
+  border-radius: 12px;
+  font-weight: 700;
   font-size: 15px;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 109, 119, 0.2);
 }
 
 .woocommerce form.checkout_coupon button.button:hover {
-  background: #005a63;
-  transform: translateY(-1px);
-  box-shadow: 0 2px 8px rgba(0, 109, 119, 0.2);
+  background: linear-gradient(135deg, #005a63 0%, #004a52 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 109, 119, 0.3);
 }
 
 /* Express Checkout / Google Pay Section - Redesigned */
