@@ -376,18 +376,7 @@ add_filter('woocommerce_add_to_cart_redirect', function ($url) {
   return function_exists('wc_get_cart_url') ? wc_get_cart_url() : $url;
 });
 
-/* 6) Move payment section into order review area */
-// Remove payment from default location
-remove_action('woocommerce_checkout_after_order_review', 'woocommerce_checkout_payment', 20);
-
-// Add payment section inside order review
-add_action('woocommerce_checkout_order_review', function() {
-  if (WC()->cart && !WC()->cart->is_empty()) {
-    echo '<div id="payment-wrapper">';
-    do_action('woocommerce_checkout_payment');
-    echo '</div>';
-  }
-}, 25);
+/* 6) Remove custom payment handling - let theme handle it */
 
 /* 7) Enhance additional information field label */
 add_filter('woocommerce_form_field', function($field, $key, $args, $value) {

@@ -39,16 +39,11 @@ add_action('wp_enqueue_scripts', function () {
         }
     }
     
-    // Enqueue checkout-specific styles and scripts
+    // Enqueue checkout-specific styles only (no custom JS for payment)
     if (function_exists('is_checkout') && is_checkout()) {
         $checkout_css = $base . 'assets/css/ct-checkout.css';
         if (file_exists($checkout_css)) {
             wp_enqueue_style('ct-checkout-css', $url . 'assets/css/ct-checkout.css', [], filemtime($checkout_css));
-        }
-        
-        $checkout_js = $base . 'assets/js/ct-checkout.js';
-        if (file_exists($checkout_js)) {
-            wp_enqueue_script('ct-checkout-js', $url . 'assets/js/ct-checkout.js', ['jquery'], filemtime($checkout_js), true);
         }
     }
 }, 20);

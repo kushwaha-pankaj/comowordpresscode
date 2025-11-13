@@ -146,124 +146,14 @@
   letter-spacing: -0.5px;
 }
 
-/* Payment Section - Unified Clean Design */
+/* Payment Section - Let theme handle it, just basic styling */
 .woocommerce-checkout #payment {
-  background: transparent;
-  border-radius: 0;
-  padding: 0;
   margin-top: 30px;
-  border: none;
-  position: relative;
-  box-shadow: none;
-  transition: none;
-}
-
-.woocommerce-checkout #payment:hover {
-  border-color: transparent;
-  box-shadow: none;
-}
-
-.woocommerce-checkout #payment::before {
-  content: 'Payment Method';
-  display: block;
-  font-size: 18px;
-  font-weight: 700;
-  color: #1a202c;
-  margin-bottom: 25px;
-  padding-bottom: 0;
-  border-bottom: none;
-  text-transform: none;
-  letter-spacing: -0.3px;
-}
-
-/* Ensure payment section appears inside order review */
-#order_review #payment,
-#order_review #payment-wrapper {
-  margin-top: 35px;
   padding-top: 30px;
   border-top: 2px solid #e8ecf1;
 }
 
-#order_review #payment-wrapper {
-  width: 100%;
-}
-
-/* Selected payment method styling */
-.woocommerce-checkout #payment ul.payment_methods li.wc_payment_method input[type="radio"]:checked + label {
-  color: #006D77;
-  font-weight: 700;
-}
-
-.woocommerce-checkout #payment ul.payment_methods li.wc_payment_method:has(input[type="radio"]:checked) {
-  border-color: #006D77;
-  background: linear-gradient(135deg, #ffffff 0%, #f0f9fa 100%);
-  box-shadow: 0 4px 16px rgba(0, 109, 119, 0.12);
-}
-
-/* Custom Payment Options UI */
-.ct-payment-options {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 25px;
-}
-
-.ct-payment-option {
-  background: #ffffff;
-  border: 2px solid #e8ecf1;
-  border-radius: 12px;
-  transition: all 0.3s ease;
-  cursor: pointer;
-  overflow: hidden;
-}
-
-.ct-payment-option:hover {
-  border-color: #cbd5e0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-}
-
-.ct-payment-option.ct-payment-selected {
-  border-color: #006D77;
-  background: linear-gradient(135deg, #ffffff 0%, #f0f9fa 100%);
-  box-shadow: 0 4px 16px rgba(0, 109, 119, 0.12);
-}
-
-.ct-payment-option-header {
-  padding: 18px 20px;
-  display: flex;
-  align-items: center;
-  gap: 14px;
-}
-
-.ct-payment-option input[type="radio"] {
-  width: 20px;
-  height: 20px;
-  margin: 0;
-  cursor: pointer;
-  accent-color: #006D77;
-  flex-shrink: 0;
-}
-
-.ct-payment-option label {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  cursor: pointer;
-  flex: 1;
-  margin: 0;
-  font-weight: 600;
-  color: #2d3748;
-  font-size: 15px;
-  letter-spacing: -0.2px;
-}
-
-.ct-payment-icon {
-  display: none;
-}
-
-.ct-payment-label {
-  flex: 1;
-}
+/* Removed custom payment options UI - let theme handle it */
 
 .woocommerce-checkout #payment ul.payment_methods {
   list-style: none;
@@ -315,110 +205,7 @@
   letter-spacing: -0.2px;
 }
 
-.woocommerce-checkout #payment ul.payment_methods li label img {
-  display: none;
-}
-
-/* Show payment method icons as background or inline */
-.woocommerce-checkout #payment ul.payment_methods li label {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.woocommerce-checkout #payment ul.payment_methods li label::before {
-  content: '💳';
-  font-size: 20px;
-  flex-shrink: 0;
-}
-
-.woocommerce-checkout #payment .payment_box {
-  margin-top: 0;
-  margin-left: 54px;
-  margin-right: 20px;
-  margin-bottom: 18px;
-  padding: 24px;
-  background: #f8fafb;
-  border: 2px solid #e8ecf1;
-  border-radius: 12px;
-  font-size: 14px;
-  line-height: 1.6;
-  color: #4a5568;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
-  display: none;
-}
-
-.woocommerce-checkout #payment ul.payment_methods li.wc_payment_method:has(input[type="radio"]:checked) .payment_box,
-.woocommerce-checkout #payment.ct-payment-customized ul.payment_methods li.wc_payment_method.ct-payment-selected .payment_box {
-  display: block;
-  animation: slideDown 0.3s ease;
-}
-
-@keyframes slideDown {
-  from {
-    opacity: 0;
-    transform: translateY(-10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.woocommerce-checkout #payment .payment_box p {
-  margin: 0 0 14px 0;
-  font-size: 13px;
-  color: #718096;
-}
-
-.woocommerce-checkout #payment .payment_box p:last-child {
-  margin-bottom: 0;
-}
-
-.woocommerce-checkout #payment .payment_box::before {
-  display: none;
-}
-
-/* Payment box form fields */
-.woocommerce-checkout #payment .payment_box input.input-text,
-.woocommerce-checkout #payment .payment_box select {
-  border: 2px solid #e8ecf1;
-  border-radius: 10px;
-  padding: 12px 16px;
-  font-size: 14px;
-  background: #ffffff;
-  transition: all 0.3s ease;
-  width: 100%;
-  margin-bottom: 14px;
-  font-weight: 500;
-  color: #2d3748;
-}
-
-.woocommerce-checkout #payment .payment_box input.input-text:focus,
-.woocommerce-checkout #payment .payment_box select:focus {
-  outline: none;
-  border-color: #006D77;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(0, 109, 119, 0.1);
-  transform: translateY(-1px);
-}
-
-.woocommerce-checkout #payment .payment_box label {
-  font-weight: 600;
-  color: #4a5568;
-  font-size: 13px;
-  margin-bottom: 8px;
-  display: block;
-}
-
-/* Card form layout */
-.woocommerce-checkout #payment .payment_box .form-row {
-  margin-bottom: 16px;
-}
-
-.woocommerce-checkout #payment .payment_box .form-row:last-child {
-  margin-bottom: 0;
-}
+/* Payment methods and payment box - let theme handle styling */
 
 /* Place Order Button - Premium Design */
 .woocommerce-checkout #payment #place_order {
@@ -744,8 +531,12 @@
   font-size: 13px;
 }
 
-/* Hide Coupon Section */
-.woocommerce form.checkout_coupon {
+/* Hide Coupon Section Completely */
+.woocommerce form.checkout_coupon,
+.woocommerce-checkout form.checkout_coupon,
+body.woocommerce-checkout form.checkout_coupon,
+.woocommerce-checkout .woocommerce-info.showcoupon,
+.woocommerce-checkout .woocommerce-info:has(.showcoupon) {
   display: none !important;
 }
 
@@ -753,63 +544,21 @@
 .woocommerce-checkout #payment .woocommerce-form__label-for-checkbox[for*="newsletter"],
 .woocommerce-checkout #payment input[name*="newsletter"],
 .woocommerce-checkout #payment label:has(input[name*="newsletter"]),
-.woocommerce-checkout .woocommerce-form__label-for-checkbox:has(input[name*="newsletter"]) {
+.woocommerce-checkout .woocommerce-form__label-for-checkbox:has(input[name*="newsletter"]),
+.woocommerce-checkout label:has(input[name*="newsletter"]) {
   display: none !important;
 }
 
-.woocommerce form.checkout_coupon .form-row {
-  display: flex;
-  gap: 12px;
-  margin: 0;
-}
+/* Coupon section completely removed */
 
-.woocommerce form.checkout_coupon input.input-text {
-  flex: 1;
-  padding: 14px 18px;
-  border: 2px solid #e8ecf1;
-  border-radius: 12px;
-  font-size: 15px;
-  background: #f8fafb;
-  transition: all 0.3s ease;
-  font-weight: 500;
-  color: #2d3748;
-}
-
-.woocommerce form.checkout_coupon input.input-text:focus {
-  outline: none;
-  border-color: #006D77;
-  background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(0, 109, 119, 0.1);
-  transform: translateY(-1px);
-}
-
-.woocommerce form.checkout_coupon button.button {
-  padding: 14px 28px;
-  background: linear-gradient(135deg, #006D77 0%, #005a63 100%);
-  color: #fff;
-  border: none;
-  border-radius: 12px;
-  font-weight: 700;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  white-space: nowrap;
-  box-shadow: 0 2px 8px rgba(0, 109, 119, 0.2);
-}
-
-.woocommerce form.checkout_coupon button.button:hover {
-  background: linear-gradient(135deg, #005a63 0%, #004a52 100%);
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 109, 119, 0.3);
-}
-
-/* Hide Express Checkout from Top - Move to Payment Section */
+/* Hide Express Checkout from Top - Only show in payment section */
 .woocommerce-checkout > .wc-block-components-express-payment,
 .woocommerce-checkout > form > .wc-block-components-express-payment,
 .woocommerce-checkout form.checkout > .wc-block-components-express-payment,
 .woocommerce-checkout .row > .wc-block-components-express-payment,
 .woocommerce-checkout .col-lg-8 > .wc-block-components-express-payment,
 .woocommerce-checkout .col-lg-4 > .wc-block-components-express-payment,
+.woocommerce-checkout .customer_details_address > .wc-block-components-express-payment,
 body.woocommerce-checkout .wc-block-components-express-payment:not(#payment .wc-block-components-express-payment),
 body.woocommerce-checkout [id*="express-checkout"]:not(#payment [id*="express-checkout"]),
 body.woocommerce-checkout [class*="express-checkout"]:not(#payment [class*="express-checkout"]) {
@@ -896,7 +645,7 @@ body.woocommerce-checkout [class*="express-checkout"]:not(#payment [class*="expr
   display: none !important;
 }
 
-/* Remove OR Separator - Not needed anymore */
+/* Remove OR Separator */
 .woocommerce-checkout .wc-block-components-separator {
   display: none;
 }
@@ -906,11 +655,18 @@ body.woocommerce-checkout [class*="express-checkout"]:not(#payment [class*="expr
   display: none;
 }
 
-/* Fix layout spacing */
+/* Swap Layout - Order Review on Left, Billing on Right */
 .woocommerce-checkout .row {
   margin: 0 -15px;
   display: flex;
   flex-wrap: wrap;
+  flex-direction: row-reverse;
+  align-items: flex-start;
+}
+
+.woocommerce-checkout .customer_details_address,
+.woocommerce-checkout #order_review {
+  height: 100%;
 }
 
 .woocommerce-checkout .row > [class*="col-"] {
@@ -919,10 +675,12 @@ body.woocommerce-checkout [class*="express-checkout"]:not(#payment [class*="expr
 
 .woocommerce-checkout .col-lg-8 {
   width: 50%;
+  order: 2;
 }
 
 .woocommerce-checkout .col-lg-4 {
   width: 50%;
+  order: 1;
 }
 
 .woocommerce-checkout form.checkout {
@@ -945,9 +703,14 @@ body.woocommerce-checkout [class*="express-checkout"]:not(#payment [class*="expr
 
 /* Responsive Design */
 @media (max-width: 991px) {
+  .woocommerce-checkout .row {
+    flex-direction: column;
+  }
+  
   .woocommerce-checkout .col-lg-8,
   .woocommerce-checkout .col-lg-4 {
     width: 100%;
+    order: 0;
   }
   
   .customer_details_address {
