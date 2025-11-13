@@ -157,32 +157,32 @@
   font-size: 28px;
 }
 
-/* Payment Section - Modern Design */
+/* Payment Section - Unified Clean Design */
 .woocommerce-checkout #payment {
-  background: #ffffff;
-  border-radius: 16px;
-  padding: 28px;
+  background: transparent;
+  border-radius: 0;
+  padding: 0;
   margin-top: 30px;
-  border: 2px solid #e8ecf1;
+  border: none;
   position: relative;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
+  box-shadow: none;
+  transition: none;
 }
 
 .woocommerce-checkout #payment:hover {
-  border-color: #006D77;
-  box-shadow: 0 4px 20px rgba(0, 109, 119, 0.08);
+  border-color: transparent;
+  box-shadow: none;
 }
 
 .woocommerce-checkout #payment::before {
   content: '💳 Payment Method';
   display: block;
-  font-size: 17px;
+  font-size: 18px;
   font-weight: 700;
   color: #1a202c;
-  margin-bottom: 20px;
-  padding-bottom: 15px;
-  border-bottom: 2px solid #e8ecf1;
+  margin-bottom: 25px;
+  padding-bottom: 0;
+  border-bottom: none;
   text-transform: none;
   letter-spacing: -0.3px;
 }
@@ -190,73 +190,126 @@
 /* Ensure payment section appears inside order review */
 #order_review #payment,
 #order_review #payment-wrapper {
-  margin-top: 30px;
+  margin-top: 35px;
+  padding-top: 30px;
+  border-top: 2px solid #e8ecf1;
 }
 
 #order_review #payment-wrapper {
   width: 100%;
 }
 
+/* Selected payment method styling */
+.woocommerce-checkout #payment ul.payment_methods li.wc_payment_method input[type="radio"]:checked + label {
+  color: #006D77;
+  font-weight: 700;
+}
+
+.woocommerce-checkout #payment ul.payment_methods li.wc_payment_method:has(input[type="radio"]:checked) {
+  border-color: #006D77;
+  background: linear-gradient(135deg, #ffffff 0%, #f0f9fa 100%);
+  box-shadow: 0 4px 16px rgba(0, 109, 119, 0.12);
+}
+
 .woocommerce-checkout #payment ul.payment_methods {
   list-style: none;
   padding: 0;
-  margin: 0 0 20px 0;
+  margin: 0 0 25px 0;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
 }
 
 .woocommerce-checkout #payment ul.payment_methods li {
-  margin-bottom: 15px;
-  padding: 15px;
+  margin-bottom: 0;
+  padding: 18px 20px;
   background: #ffffff;
-  border: 2px solid #e8e8e8;
-  border-radius: 8px;
+  border: 2px solid #e8ecf1;
+  border-radius: 12px;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
 }
 
 .woocommerce-checkout #payment ul.payment_methods li:hover {
   border-color: #006D77;
-  box-shadow: 0 2px 8px rgba(0, 109, 119, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 109, 119, 0.08);
+  transform: translateY(-1px);
 }
 
 .woocommerce-checkout #payment ul.payment_methods li.wc_payment_method {
   display: flex;
-  align-items: flex-start;
-  gap: 12px;
+  align-items: center;
+  gap: 14px;
 }
 
 .woocommerce-checkout #payment ul.payment_methods li input[type="radio"] {
-  margin-top: 4px;
+  margin: 0;
   width: 20px;
   height: 20px;
   cursor: pointer;
   accent-color: #006D77;
+  flex-shrink: 0;
 }
 
 .woocommerce-checkout #payment ul.payment_methods li label {
   font-weight: 600;
-  color: #333;
+  color: #2d3748;
   cursor: pointer;
   flex: 1;
   font-size: 15px;
   margin: 0;
+  letter-spacing: -0.2px;
+}
+
+.woocommerce-checkout #payment ul.payment_methods li label img {
+  max-height: 24px;
+  width: auto;
+  vertical-align: middle;
+  margin-left: 8px;
 }
 
 .woocommerce-checkout #payment .payment_box {
-  margin-top: 12px;
-  padding: 15px;
-  background: #f0f9fa;
-  border-left: 4px solid #006D77;
-  border-radius: 6px;
+  margin-top: 16px;
+  padding: 18px;
+  background: #f8fafb;
+  border: 2px solid #e8ecf1;
+  border-radius: 10px;
   font-size: 14px;
   line-height: 1.6;
-  color: #555;
+  color: #4a5568;
+  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.03);
 }
 
 .woocommerce-checkout #payment .payment_box p {
-  margin: 0;
+  margin: 0 0 12px 0;
+}
+
+.woocommerce-checkout #payment .payment_box p:last-child {
+  margin-bottom: 0;
 }
 
 .woocommerce-checkout #payment .payment_box::before {
   display: none;
+}
+
+/* Payment box form fields */
+.woocommerce-checkout #payment .payment_box input.input-text,
+.woocommerce-checkout #payment .payment_box select {
+  border: 2px solid #e8ecf1;
+  border-radius: 8px;
+  padding: 10px 14px;
+  font-size: 14px;
+  background: #ffffff;
+  transition: all 0.3s ease;
+  width: 100%;
+  margin-bottom: 12px;
+}
+
+.woocommerce-checkout #payment .payment_box input.input-text:focus,
+.woocommerce-checkout #payment .payment_box select:focus {
+  outline: none;
+  border-color: #006D77;
+  box-shadow: 0 0 0 3px rgba(0, 109, 119, 0.1);
 }
 
 /* Place Order Button - Premium Design */
