@@ -50,10 +50,7 @@
   gap: 10px;
 }
 
-.woocommerce-additional-fields h3::before {
-  content: '📝';
-  font-size: 20px;
-}
+/* Removed icon from additional fields heading */
 
 .woocommerce-additional-fields .form-row {
   margin: 0;
@@ -147,14 +144,6 @@
   border-bottom: 3px solid #006D77;
   text-transform: none;
   letter-spacing: -0.5px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-}
-
-#order_review_heading::before {
-  content: '🛒';
-  font-size: 28px;
 }
 
 /* Payment Section - Unified Clean Design */
@@ -175,7 +164,7 @@
 }
 
 .woocommerce-checkout #payment::before {
-  content: '💳 Payment Method';
+  content: 'Payment Method';
   display: block;
   font-size: 18px;
   font-weight: 700;
@@ -269,20 +258,7 @@
 }
 
 .ct-payment-icon {
-  font-size: 24px;
-  flex-shrink: 0;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: #f8fafb;
-  border-radius: 8px;
-}
-
-.ct-payment-selected .ct-payment-icon {
-  background: #006D77;
-  color: #ffffff;
+  display: none;
 }
 
 .ct-payment-label {
@@ -465,11 +441,7 @@
   overflow: hidden !important;
 }
 
-.woocommerce-checkout #payment #place_order::before {
-  content: '🔒';
-  margin-right: 8px;
-  font-size: 16px;
-}
+/* Removed lock icon from place order button */
 
 .woocommerce-checkout #payment #place_order:hover {
   background: linear-gradient(135deg, #005a63 0%, #004a52 100%) !important;
@@ -536,15 +508,7 @@
   gap: 10px;
 }
 
-.woocommerce-billing-fields h3::before {
-  content: '👤';
-  font-size: 22px;
-}
-
-.woocommerce-shipping-fields h3::before {
-  content: '📦';
-  font-size: 22px;
-}
+/* Removed icons from headings */
 
 /* Ensure proper spacing for form sections */
 .woocommerce-billing-fields,
@@ -656,23 +620,47 @@
   border-spacing: 0;
 }
 
-.woocommerce-checkout-review-order table.shop_table th,
-.woocommerce-checkout-review-order table.shop_table td {
-  padding: 18px 0;
+.woocommerce-checkout-review-order table.shop_table thead {
+  display: table-header-group;
+}
+
+.woocommerce-checkout-review-order table.shop_table thead th {
+  padding: 12px 0;
+  border-bottom: 2px solid #e8ecf1;
+  font-size: 13px;
+  font-weight: 700;
+  color: #4a5568;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  text-align: left;
+}
+
+.woocommerce-checkout-review-order table.shop_table thead th:first-child {
+  width: 60%;
+}
+
+.woocommerce-checkout-review-order table.shop_table thead th:last-child {
+  width: 40%;
+  text-align: right;
+}
+
+.woocommerce-checkout-review-order table.shop_table tbody th,
+.woocommerce-checkout-review-order table.shop_table tbody td {
+  padding: 16px 0;
   border-bottom: 1px solid #e8ecf1;
   font-size: 15px;
   text-align: left;
-  vertical-align: middle;
+  vertical-align: top;
 }
 
-.woocommerce-checkout-review-order table.shop_table th {
+.woocommerce-checkout-review-order table.shop_table tbody th {
   font-weight: 600;
-  color: #4a5568;
+  color: #2d3748;
   width: 60%;
   letter-spacing: -0.2px;
 }
 
-.woocommerce-checkout-review-order table.shop_table td {
+.woocommerce-checkout-review-order table.shop_table tbody td {
   text-align: right;
   width: 40%;
   font-weight: 600;
@@ -700,55 +688,73 @@
   letter-spacing: -0.5px;
 }
 
-.woocommerce-checkout-review-order table.shop_table .order-total th::before {
-  content: '💰';
-  margin-right: 8px;
-  font-size: 20px;
-}
+/* Removed icon from order total */
 
-/* Product name and quantity */
+/* Product name and quantity - Better alignment */
 .woocommerce-checkout-review-order table.shop_table .product-name {
   font-weight: 600;
   color: #2d3748;
+  line-height: 1.5;
+}
+
+.woocommerce-checkout-review-order table.shop_table .product-name .product-quantity {
+  display: block;
+  font-weight: 500;
+  color: #718096;
+  font-size: 13px;
+  margin-top: 4px;
 }
 
 .woocommerce-checkout-review-order table.shop_table .product-total {
   font-weight: 700;
   color: #006D77;
   font-size: 16px;
+  vertical-align: top;
+  padding-top: 16px;
 }
 
-/* Coupon Section - Modern Card Design */
+/* Booking details in order review */
+.woocommerce-checkout-review-order table.shop_table .product-name .ct-cart-booking-details {
+  margin-top: 12px;
+  padding: 14px;
+  background: #f8fafb;
+  border-radius: 8px;
+  border-left: 3px solid #006D77;
+  font-size: 13px;
+}
+
+.woocommerce-checkout-review-order table.shop_table .product-name .ct-cart-booking-details .ct-cart-meta-item {
+  padding: 6px 0;
+  border-bottom: 1px solid #e8ecf1;
+  font-size: 13px;
+}
+
+.woocommerce-checkout-review-order table.shop_table .product-name .ct-cart-booking-details .ct-cart-meta-item:last-of-type {
+  border-bottom: none;
+}
+
+.woocommerce-checkout-review-order table.shop_table .product-name .ct-cart-booking-details .ct-cart-meta-label {
+  min-width: 120px;
+  font-size: 12px;
+  color: #718096;
+}
+
+.woocommerce-checkout-review-order table.shop_table .product-name .ct-cart-booking-details strong {
+  color: #2d3748;
+  font-size: 13px;
+}
+
+/* Hide Coupon Section */
 .woocommerce form.checkout_coupon {
-  max-width: 100%;
-  margin: 0 0 25px 0;
-  padding: 25px;
-  background: #ffffff;
-  border-radius: 16px;
-  border: 2px solid #e8ecf1;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.04);
-  transition: all 0.3s ease;
+  display: none !important;
 }
 
-.woocommerce form.checkout_coupon:hover {
-  border-color: #006D77;
-  box-shadow: 0 4px 20px rgba(0, 109, 119, 0.08);
-}
-
-.woocommerce form.checkout_coupon p {
-  margin: 0 0 16px 0;
-  font-weight: 700;
-  color: #1a202c;
-  font-size: 16px;
-  letter-spacing: -0.3px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.woocommerce form.checkout_coupon p::before {
-  content: '🎟️';
-  font-size: 18px;
+/* Hide Newsletter Subscription */
+.woocommerce-checkout #payment .woocommerce-form__label-for-checkbox[for*="newsletter"],
+.woocommerce-checkout #payment input[name*="newsletter"],
+.woocommerce-checkout #payment label:has(input[name*="newsletter"]),
+.woocommerce-checkout .woocommerce-form__label-for-checkbox:has(input[name*="newsletter"]) {
+  display: none !important;
 }
 
 .woocommerce form.checkout_coupon .form-row {
@@ -800,7 +806,13 @@
 /* Hide Express Checkout from Top - Move to Payment Section */
 .woocommerce-checkout > .wc-block-components-express-payment,
 .woocommerce-checkout > form > .wc-block-components-express-payment,
-body.woocommerce-checkout .wc-block-components-express-payment:not(#payment .wc-block-components-express-payment) {
+.woocommerce-checkout form.checkout > .wc-block-components-express-payment,
+.woocommerce-checkout .row > .wc-block-components-express-payment,
+.woocommerce-checkout .col-lg-8 > .wc-block-components-express-payment,
+.woocommerce-checkout .col-lg-4 > .wc-block-components-express-payment,
+body.woocommerce-checkout .wc-block-components-express-payment:not(#payment .wc-block-components-express-payment),
+body.woocommerce-checkout [id*="express-checkout"]:not(#payment [id*="express-checkout"]),
+body.woocommerce-checkout [class*="express-checkout"]:not(#payment [class*="express-checkout"]) {
   display: none !important;
 }
 

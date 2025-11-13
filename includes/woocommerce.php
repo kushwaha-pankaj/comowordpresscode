@@ -242,35 +242,34 @@ add_action('woocommerce_after_cart_item_name', function($cart_item, $cart_item_k
   if (!empty($cart_item['date'])) {
     $date_obj = DateTime::createFromFormat('Y-m-d', $cart_item['date']);
     $formatted_date = $date_obj ? $date_obj->format('F j, Y') : $cart_item['date'];
-    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">📅 ' . __('Booking Date', 'comotour') . ':</span> <strong>' . esc_html($formatted_date) . '</strong></div>';
+    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('Booking Date', 'comotour') . ':</span> <strong>' . esc_html($formatted_date) . '</strong></div>';
   }
   
   // Format time slot
   if (!empty($cart_item['slot_id'])) {
     $slotLabel = !empty($cart_item['slot_label']) ? esc_html($cart_item['slot_label']) : esc_html($cart_item['slot_id']);
-    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">🕐 ' . __('Time Slot', 'comotour') . ':</span> <strong>' . $slotLabel . '</strong></div>';
+    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('Time Slot', 'comotour') . ':</span> <strong>' . $slotLabel . '</strong></div>';
   }
   
   // Format booking type
   if (!empty($cart_item['mode'])) {
     $mode_label = ucfirst(esc_html($cart_item['mode']));
-    $mode_icon = $cart_item['mode'] === 'private' ? '👥' : '🎫';
-    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . $mode_icon . ' ' . __('Booking Type', 'comotour') . ':</span> <strong>' . $mode_label . '</strong></div>';
+    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('Booking Type', 'comotour') . ':</span> <strong>' . $mode_label . '</strong></div>';
   }
   
   // Format people count
   if (isset($cart_item['people']) && $cart_item['people'] > 0) {
-    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">👤 ' . __('Number of People', 'comotour') . ':</span> <strong>' . intval($cart_item['people']) . '</strong></div>';
+    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('Number of People', 'comotour') . ':</span> <strong>' . intval($cart_item['people']) . '</strong></div>';
   }
   
   // Format extras
   if (!empty($cart_item['extras']) && is_array($cart_item['extras'])) {
-    $extras_html = '<div class="ct-cart-meta-section"><strong class="ct-cart-extras-title">✨ ' . __('Selected Extras', 'comotour') . '</strong><div class="ct-cart-extras">';
+    $extras_html = '<div class="ct-cart-meta-section"><strong class="ct-cart-extras-title">' . __('Selected Extras', 'comotour') . '</strong><div class="ct-cart-extras">';
     foreach ($cart_item['extras'] as $extra) {
       $label = esc_html($extra['label']);
       $price = wc_price(floatval($extra['price']), array('currency' => 'EUR'));
       $extras_html .= '<div class="ct-cart-extra-item">';
-      $extras_html .= '<span class="ct-cart-extra-label">✨ ' . $label . '</span>';
+      $extras_html .= '<span class="ct-cart-extra-label">' . $label . '</span>';
       $extras_html .= '<span class="ct-cart-extra-price">+ ' . $price . '</span>';
       $extras_html .= '</div>';
     }
@@ -282,6 +281,60 @@ add_action('woocommerce_after_cart_item_name', function($cart_item, $cart_item_k
     echo '<div class="ct-cart-booking-details">' . implode('', $html_parts) . '</div>';
   }
 }, 10, 2);
+
+/* 4.6) Display booking details in checkout order review */
+add_filter('woocommerce_cart_item_name', function($product_name, $cart_item, $cart_item_key) {
+  if (empty($cart_item['date']) && empty($cart_item['slot_id'])) {
+    return $product_name;
+  }
+  
+  $html_parts = array();
+  
+  // Format date
+  if (!empty($cart_item['date'])) {
+    $date_obj = DateTime::createFromFormat('Y-m-d', $cart_item['date']);
+    $formatted_date = $date_obj ? $date_obj->format('F j, Y') : $cart_item['date'];
+    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('Booking Date', 'comotour') . ':</span> <strong>' . esc_html($formatted_date) . '</strong></div>';
+  }
+  
+  // Format time slot
+  if (!empty($cart_item['slot_id'])) {
+    $slotLabel = !empty($cart_item['slot_label']) ? esc_html($cart_item['slot_label']) : esc_html($cart_item['slot_id']);
+    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('Time Slot', 'comotour') . ':</span> <strong>' . $slotLabel . '</strong></div>';
+  }
+  
+  // Format booking type
+  if (!empty($cart_item['mode'])) {
+    $mode_label = ucfirst(esc_html($cart_item['mode']));
+    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('Booking Type', 'comotour') . ':</span> <strong>' . $mode_label . '</strong></div>';
+  }
+  
+  // Format people count
+  if (isset($cart_item['people']) && $cart_item['people'] > 0) {
+    $html_parts[] = '<div class="ct-cart-meta-item"><span class="ct-cart-meta-label">' . __('Number of People', 'comotour') . ':</span> <strong>' . intval($cart_item['people']) . '</strong></div>';
+  }
+  
+  // Format extras
+  if (!empty($cart_item['extras']) && is_array($cart_item['extras'])) {
+    $extras_html = '<div class="ct-cart-meta-section"><strong class="ct-cart-extras-title">' . __('Selected Extras', 'comotour') . '</strong><div class="ct-cart-extras">';
+    foreach ($cart_item['extras'] as $extra) {
+      $label = esc_html($extra['label']);
+      $price = wc_price(floatval($extra['price']), array('currency' => 'EUR'));
+      $extras_html .= '<div class="ct-cart-extra-item">';
+      $extras_html .= '<span class="ct-cart-extra-label">' . $label . '</span>';
+      $extras_html .= '<span class="ct-cart-extra-price">+ ' . $price . '</span>';
+      $extras_html .= '</div>';
+    }
+    $extras_html .= '</div></div>';
+    $html_parts[] = $extras_html;
+  }
+  
+  if (!empty($html_parts)) {
+    $product_name .= '<div class="ct-cart-booking-details">' . implode('', $html_parts) . '</div>';
+  }
+  
+  return $product_name;
+}, 10, 3);
 
 /* 5) Persist on Order */
 add_action('woocommerce_checkout_create_order_line_item', function ($item, $cart_item_key, $values) {

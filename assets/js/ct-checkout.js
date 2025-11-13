@@ -56,7 +56,7 @@
                 '<div class="ct-payment-option-header">' +
                 '<input type="radio" name="ct_payment_method" id="ct_payment_gpay" value="gpay">' +
                 '<label for="ct_payment_gpay">' +
-                '<span class="ct-payment-icon">🔵</span>' +
+                '<span class="ct-payment-icon"></span>' +
                 '<span class="ct-payment-label">Pay with Google Pay</span>' +
                 '</label>' +
                 '</div>' +
